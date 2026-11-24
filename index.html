@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VidyaSetu ERP | Smart Institute Management</title>
+    <title>VidyaSetu ERP | Smart School, College & Library Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="animations.css">
     <style>
-        body { font-family: 'Inter', 'Noto Sans Devanagari', sans-serif; overflow-x: hidden; }
+        body { font-family: 'Inter', 'Noto Sans Devanagari', sans-serif; overflow-x: hidden; scroll-behavior: smooth; }
         @media print { .no-print { display: none !important; } }
     </style>
 </head>
@@ -18,13 +18,14 @@
     <!-- Ambient Background Glow -->
     <div class="no-print fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
-        <div class="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/2 right-0 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- 1. Login Screen -->
-    <div id="login-screen" class="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 tab-transition">
-        
-        <!-- Top Language & Theme Controls -->
+    <!-- 1. VidyaSetu आधिकारिक मुख्य होमपेज (केवल मुख्य URL पर खुलेगा) -->
+    <div id="landing-view" class="hidden relative z-10"></div>
+
+    <!-- 2. कॉलेज / सुपर एडमिन लॉगिन स्क्रीन (?college=... या ?portal=superadmin पर खुलेगी) -->
+    <div id="login-screen" class="hidden relative z-10 min-h-screen flex flex-col justify-center items-center p-4 tab-transition">
         <div class="mb-4 flex items-center gap-2">
             <button onclick="toggleLanguage()" id="login-lang-btn" class="bg-white/90 dark:bg-slate-800/90 border border-indigo-500/40 text-indigo-600 dark:text-indigo-300 px-4 py-1.5 rounded-full text-xs font-extrabold shadow-lg hover:scale-105 transition">
                 🇮🇳 हिंदी में बदलें
@@ -39,11 +40,11 @@
                 <div id="login-logo-box" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white mx-auto flex items-center justify-center text-3xl shadow-lg mb-3 overflow-hidden">
                     🌉
                 </div>
-                <div class="inline-block text-[10px] font-extrabold tracking-widest uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full mb-1">
-                    VidyaSetu ERP
+                <div id="login-badge-tag" class="inline-block text-[10px] font-extrabold tracking-widest uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full mb-1">
+                    VidyaSetu Cloud Portal
                 </div>
                 <h1 id="login-portal-title" class="text-2xl font-extrabold text-slate-900 dark:text-white">
-                    Adarsh Vidya Mandir Inter College
+                    Institute Login
                 </h1>
                 <p id="login-portal-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Sign in with your assigned Username & Password
@@ -71,15 +72,13 @@
 
             <div id="demo-credentials-hint" class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center"></div>
             <div class="mt-3 text-center text-[10px] text-slate-500">
-                Powered by <strong class="text-indigo-400">VidyaSetu</strong> • Digital Bridge for Education
+                Powered by <a href="?" class="text-indigo-400 font-bold hover:underline">VidyaSetu ERP</a>
             </div>
         </div>
     </div>
 
-    <!-- 2. Dynamic Left Sidebar + Main Workspace -->
+    <!-- 3. डायनामिक लेफ्ट साइडबार + मुख्य डैशबोर्ड -->
     <div id="dashboard-screen" class="hidden relative z-10 min-h-screen flex flex-col lg:flex-row">
-        
-        <!-- Dynamic Left Sidebar -->
         <aside id="left-sidebar" class="no-print w-full lg:w-64 glass-panel border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800/90 p-4 flex flex-col justify-between shrink-0">
             <div>
                 <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-slate-800">
@@ -88,13 +87,12 @@
                             🌉
                         </div>
                         <div class="overflow-hidden">
-                            <h2 id="sidebar-org-name" class="font-bold text-sm text-slate-900 dark:text-white truncate">Adarsh Vidya Mandir</h2>
-                            <span id="sidebar-user-badge" class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 mt-0.5 truncate">User Panel</span>
+                            <h2 id="sidebar-org-name" class="font-bold text-sm text-slate-900 dark:text-white truncate">VidyaSetu</h2>
+                            <span id="sidebar-user-badge" class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 mt-0.5 truncate">Panel</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- 1-Click Language & Theme Control Bar -->
                 <div class="flex items-center gap-2 mb-4">
                     <button onclick="toggleLanguage()" id="sidebar-lang-btn" class="flex-1 bg-indigo-600/15 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/30 py-1.5 px-2.5 rounded-xl text-xs font-extrabold transition text-center">
                         🇮🇳 हिंदी
@@ -117,21 +115,20 @@
                     🚪 Logout
                 </button>
                 <div class="text-center text-[10px] text-slate-500 pt-1">
-                    VidyaSetu ERP v4.0
+                    VidyaSetu Cloud v5.0
                 </div>
             </div>
         </aside>
 
-        <!-- Main Workspace -->
         <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
             <div id="main-content" class="max-w-6xl mx-auto"></div>
         </main>
     </div>
 
+    <!-- अलग-अलग हल्की और मॉड्यूलर JS फ़ाइलें -->
+    <script src="landing.js"></script>
+    <script src="superadmin.js"></script>
     <script src="dashboard.js"></script>
-    <script src="app.js"></script>
-</body>
-</html><script src="dashboard.js"></script>
     <script src="staff.js"></script>
     <script src="app.js"></script>
 </body>

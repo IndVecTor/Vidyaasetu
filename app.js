@@ -1,74 +1,91 @@
 const urlParams = new URLSearchParams(window.location.search);
-const portalMode = urlParams.get('portal') || 'user';
+const portalMode = urlParams.get('portal') || ''; // 'superadmin' या खाली
+const collegeSlug = urlParams.get('college') || ''; // जैसे 'adarsh' या 'sunrise'
 
 let currentLang = localStorage.getItem('vidyasetu_lang') || 'en';
 let editingUserIndex = null;
 let selectedAttClass = "ALL";
 let selectedAttDate = new Date().toISOString().split('T')[0];
 
+// वर्तमान कॉलेज की पहचान करना (यदि ?college=slug URL में है)
+let currentCollege = null;
+if (collegeSlug) {
+    const allCols = JSON.parse(localStorage.getItem('vs_colleges_db')) || defaultColleges;
+    currentCollege = allCols.find(c => c.slug === collegeSlug.toLowerCase());
+}
+
+// हर कॉलेज का डेटा अलग की (Storage Key) में रखना ताकि किसी का डेटा मिक्स न हो
+const storagePrefix = currentCollege ? `vs_data_${currentCollege.slug}_` : `vs_data_default_`;
+
 const defaultUsers = [
     { id: "USR01", name: "Rajesh Sharma", username: "teacher1", password: "123", roleLabel: "Teacher", powers: { dashboard: false, students: false, fees: false, payroll: false, accounts: false, library: false, notices: true, attendance: true, exams: true } },
-    { id: "USR02", name: "Sunita Verma", username: "clerk1", password: "123", roleLabel: "Office Clerk", powers: { dashboard: true, students: true, fees: true, payroll: true, accounts: true, library: false, notices: true, attendance: false, exams: false } },
-    { id: "USR03", name: "Amit Kumar", username: "lib1", password: "123", roleLabel: "Librarian", powers: { dashboard: false, students: false, fees: false, payroll: false, accounts: false, library: true, notices: true, attendance: false, exams: false } }
+    { id: "USR02", name: "Sunita Verma", username: "clerk1", password: "123", roleLabel: "Office Clerk", powers: { dashboard: true, students: true, fees: true, payroll: true, accounts: true, library: false, notices: true, attendance: false, exams: false } }
 ];
 
-const defaultSchoolPowers = { portalActive: true, allowAdmission: true, allowFees: true, allowPayroll: true, allowAccounts: true, allowLibrary: true, allowNotices: true, allowAttendance: true, allowExams: true };
-const adminCredentials = { username: "admin", password: "123", name: "Principal / Admin" };
 const superAdminCredentials = { username: "superadmin", password: "123", name: "Aman Kumar (Master Admin)" };
 
 const defaultStudents = [
     { id: "STU101", name: "Aarav Sharma", father: "Rajesh Sharma", class: "Class 10", roll: "101", mobile: "9876543210", totalFee: 12000, paidFee: 12000, attStatus: "P", attRemark: "On Time", monthlyPercent: 94, marks: { hindi: 88, english: 84, math: 95, science: 91 } },
-    { id: "STU102", name: "Ananya Verma", father: "Suresh Verma", class: "Class 10", roll: "102", mobile: "9876543211", totalFee: 12000, paidFee: 8000, attStatus: "L", attRemark: "Medical Leave", monthlyPercent: 88, marks: { hindi: 92, english: 89, math: 78, science: 85 } },
-    { id: "STU103", name: "Rohan Yadav", father: "Mahesh Yadav", class: "Class 12", roll: "201", mobile: "9876543212", totalFee: 15000, paidFee: 10000, attStatus: "A", attRemark: "Uninformed", monthlyPercent: 76, marks: { hindi: 75, english: 70, math: 82, science: 79 } },
-    { id: "STU104", name: "Priya Singh", father: "Vinod Singh", class: "Class 12", roll: "202", mobile: "9876543213", totalFee: 15000, paidFee: 15000, attStatus: "H", attRemark: "Half Day", monthlyPercent: 91, marks: { hindi: 94, english: 91, math: 89, science: 93 } }
+    { id: "STU102", name: "Ananya Verma", father: "Suresh Verma", class: "Class 10", roll: "102", mobile: "9876543211", totalFee: 12000, paidFee: 8000, attStatus: "L", attRemark: "Medical Leave", monthlyPercent: 88, marks: { hindi: 92, english: 89, math: 78, science: 85 } }
 ];
 
-const defaultExpenses = [
-    { id: 1, title: "Electricity & Internet Bill", category: "Utility", amount: 3200, date: "10/11/2026" },
-    { id: 2, title: "Stationery & Printing", category: "Office", amount: 1500, date: "15/11/2026" }
-];
+const defaultExpenses = [{ id: 1, title: "Electricity & Internet Bill", amount: 3200, date: "10/11/2026" }];
+const defaultNotices = [{ id: 1, title: "Welcome to Digital Campus", body: "All academic and fee records are now live on VidyaSetu.", date: "24/11/2026" }];
+const defaultSeats = Array.from({ length: 20 }, (_, i) => ({ seatNo: i + 1, status: i === 0 ? "booked" : "available", studentName: i === 0 ? "Aarav Sharma" : "" }));
 
-const defaultNotices = [
-    { id: 1, title: "Half-Yearly Exam Schedule", body: "Examinations for all classes will commence from upcoming Monday.", date: "20/11/2026", urgent: true },
-    { id: 2, title: "Fee Submission Deadline", body: "Students with pending fees must clear dues before the 30th.", date: "18/11/2026", urgent: false }
-];
-
-const defaultSeats = Array.from({ length: 20 }, (_, i) => {
-    const seatNo = i + 1;
-    if (seatNo === 1) return { seatNo, status: "booked", studentName: "Aarav Sharma", shift: "Morning" };
-    if (seatNo === 4) return { seatNo, status: "booked", studentName: "Ananya Verma", shift: "Full Day" };
-    return { seatNo, status: "available", studentName: "", shift: "" };
-});
-
-let appUsers = JSON.parse(localStorage.getItem('vs_users')) || defaultUsers;
-let schoolPowers = JSON.parse(localStorage.getItem('vs_school_powers')) || defaultSchoolPowers;
-let students = JSON.parse(localStorage.getItem('vs_students')) || defaultStudents;
-let expenses = JSON.parse(localStorage.getItem('vs_expenses')) || defaultExpenses;
-let notices = JSON.parse(localStorage.getItem('vs_notices')) || defaultNotices;
-let librarySeats = JSON.parse(localStorage.getItem('vs_seats')) || defaultSeats;
-let orgName = localStorage.getItem('vs_org') || "Adarsh Vidya Mandir Inter College";
-let orgLogo = localStorage.getItem('vs_logo') || "";
+let appUsers = JSON.parse(localStorage.getItem(storagePrefix + 'users')) || defaultUsers;
+let students = JSON.parse(localStorage.getItem(storagePrefix + 'students')) || defaultStudents;
+let expenses = JSON.parse(localStorage.getItem(storagePrefix + 'expenses')) || defaultExpenses;
+let notices = JSON.parse(localStorage.getItem(storagePrefix + 'notices')) || defaultNotices;
+let librarySeats = JSON.parse(localStorage.getItem(storagePrefix + 'seats')) || defaultSeats;
+let orgName = currentCollege ? currentCollege.name : "VidyaSetu Institute";
+let orgLogo = currentCollege ? currentCollege.logo : "";
 
 let loggedUser = null;
 let activeTab = "";
 
 function saveData() {
-    localStorage.setItem('vs_users', JSON.stringify(appUsers));
-    localStorage.setItem('vs_school_powers', JSON.stringify(schoolPowers));
-    localStorage.setItem('vs_students', JSON.stringify(students));
-    localStorage.setItem('vs_expenses', JSON.stringify(expenses));
-    localStorage.setItem('vs_notices', JSON.stringify(notices));
-    localStorage.setItem('vs_seats', JSON.stringify(librarySeats));
-    localStorage.setItem('vs_org', orgName);
-    if (orgLogo) localStorage.setItem('vs_logo', orgLogo);
+    localStorage.setItem(storagePrefix + 'users', JSON.stringify(appUsers));
+    localStorage.setItem(storagePrefix + 'students', JSON.stringify(students));
+    localStorage.setItem(storagePrefix + 'expenses', JSON.stringify(expenses));
+    localStorage.setItem(storagePrefix + 'notices', JSON.stringify(notices));
+    localStorage.setItem(storagePrefix + 'seats', JSON.stringify(librarySeats));
 }
+
+// =========================================================================
+// 1. URL राउटर: तय करना कि कौन-सी स्क्रीन खुलनी है
+// =========================================================================
+window.onload = function() {
+    if (portalMode === 'superadmin') {
+        document.getElementById('login-screen').classList.remove('hidden');
+        updateLoginScreenLanguage();
+    } else if (collegeSlug) {
+        if (!currentCollege) {
+            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-rose-500">404 • Invalid College URL</h1><p class="text-sm text-slate-400 mt-2">This institute link does not exist on VidyaSetu.</p><a href="?" class="mt-4 bg-indigo-600 text-white px-5 py-2 rounded-xl text-xs font-bold">Go to VidyaSetu Home</a></div>`;
+            return;
+        }
+        if (!currentCollege.active) {
+            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-amber-500">⛔ Subscription Suspended</h1><p class="text-sm text-slate-400 mt-2">The portal for <strong>${currentCollege.name}</strong> is currently inactive. Contact VidyaSetu Support.</p></div>`;
+            return;
+        }
+        document.getElementById('login-screen').classList.remove('hidden');
+        updateLoginScreenLanguage();
+    } else {
+        // मुख्य URL: सिर्फ़ VidyaSetu का आधिकारिक होमपेज दिखेगा
+        document.getElementById('landing-view').classList.remove('hidden');
+        renderVidyaSetuLandingPage();
+    }
+};
 
 function toggleLanguage() {
     currentLang = currentLang === 'en' ? 'hi' : 'en';
     localStorage.setItem('vidyasetu_lang', currentLang);
-    updateLoginScreenLanguage();
+    if (!document.getElementById('landing-view').classList.contains('hidden')) renderVidyaSetuLandingPage();
+    if (!document.getElementById('login-screen').classList.contains('hidden')) updateLoginScreenLanguage();
     if (loggedUser) { updateSidebarStaticText(); renderApp(); }
 }
+
+function toggleTheme() { document.documentElement.classList.toggle('dark'); }
 
 function updateLoginScreenLanguage() {
     const isHi = currentLang === 'hi';
@@ -81,26 +98,19 @@ function updateLoginScreenLanguage() {
     document.getElementById('login-lang-btn').innerText = isHi ? '🇬🇧 Switch to English' : '🇮🇳 हिंदी में बदलें';
     document.getElementById('lbl-username').innerText = isHi ? 'यूज़रनेम (Username)' : 'Username';
     document.getElementById('lbl-password').innerText = isHi ? 'पासवर्ड (Password)' : 'Password';
-    document.getElementById('login-username').placeholder = isHi ? 'अपना यूज़रनेम डालें' : 'Enter your username';
     btnEl.innerText = isHi ? '🔐 सुरक्षित लॉगिन करें' : '🔐 Secure Login';
 
     if (portalMode === 'superadmin') {
         titleEl.innerText = isHi ? "👑 विद्यासेतु मास्टर कंट्रोल पैनल" : "👑 VidyaSetu Master Control Panel";
         subEl.innerText = isHi ? "केवल सिस्टम मालिक के लिए प्रतिबंधित प्रवेश" : "Restricted Access • System Owner Only";
         logoEl.innerHTML = "👑";
-        logoEl.className = "w-16 h-16 rounded-2xl bg-gradient-to-tr from-purple-600 to-pink-600 text-white mx-auto flex items-center justify-center text-3xl shadow-lg mb-3";
         btnEl.className = "w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-3 rounded-xl shadow-lg transition";
         hintEl.innerHTML = `Username: <strong class="text-purple-400">superadmin</strong> | Password: <strong class="text-purple-400">123</strong>`;
-    } else if (portalMode === 'admin') {
-        titleEl.innerText = orgName + (isHi ? " (प्रशासक)" : " (Admin)");
-        subEl.innerText = isHi ? "संस्थान एडमिन नियंत्रण लॉगिन" : "Institute Administrator Control Login";
-        logoEl.innerHTML = orgLogo ? `<img src="${orgLogo}" class="w-full h-full object-cover">` : "🛡️";
-        hintEl.innerHTML = `Username: <strong class="text-indigo-400">admin</strong> | Password: <strong class="text-indigo-400">123</strong>`;
-    } else {
-        titleEl.innerText = orgName;
-        subEl.innerText = isHi ? "स्टाफ एवं यूज़र लॉगिन पोर्टल" : "Staff & User Login Portal";
-        logoEl.innerHTML = orgLogo ? `<img src="${orgLogo}" class="w-full h-full object-cover">` : "🌉";
-        hintEl.innerHTML = isHi ? `डेमो लॉगिन — <strong>clerk1</strong> या <strong>teacher1</strong> (पासवर्ड: 123)` : `Demo Staff — <strong>clerk1</strong> or <strong>teacher1</strong> (Password: 123)`;
+    } else if (currentCollege) {
+        titleEl.innerText = currentCollege.name;
+        subEl.innerText = isHi ? "संस्थान एडमिन एवं स्टाफ लॉगिन पोर्टल" : "Institute Admin & Staff Login Portal";
+        logoEl.innerHTML = currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏫";
+        hintEl.innerHTML = isHi ? `प्रिंसिपल लॉगिन: <strong>${currentCollege.adminUser}</strong> (पासवर्ड: ${currentCollege.adminPass}) | स्टाफ: <strong>clerk1</strong>` : `Principal Login: <strong>${currentCollege.adminUser}</strong> (Pass: ${currentCollege.adminPass}) | Staff: <strong>clerk1</strong>`;
     }
 }
 
@@ -110,8 +120,6 @@ function updateSidebarStaticText() {
     document.getElementById('sidebar-menu-heading').innerText = isHi ? 'मुख्य मेन्यू' : 'Main Menu';
     document.getElementById('btn-logout').innerText = isHi ? '🚪 लॉगआउट करें' : '🚪 Logout';
 }
-
-window.onload = updateLoginScreenLanguage;
 
 function handleLogin(e) {
     e.preventDefault();
@@ -123,16 +131,18 @@ function handleLogin(e) {
     if (portalMode === 'superadmin' && u === superAdminCredentials.username && p === superAdminCredentials.password) {
         loggedUser = { type: 'superadmin', name: superAdminCredentials.name, roleLabel: "Master Owner" };
         errBox.classList.add('hidden'); openDashboard(); return;
-    } else if (portalMode === 'admin') {
-        if (!schoolPowers.portalActive) { errBox.innerText = isHi ? "⛔ पोर्टल बंद है।" : "⛔ Portal is suspended."; errBox.classList.remove('hidden'); return; }
-        if (u === adminCredentials.username && p === adminCredentials.password) {
-            loggedUser = { type: 'admin', name: adminCredentials.name, roleLabel: "School Admin", powers: schoolPowers };
+    } else if (currentCollege) {
+        // 1. कॉलेज एडमिन (Principal) चेक
+        if (u === currentCollege.adminUser && p === currentCollege.adminPass) {
+            loggedUser = { type: 'admin', name: "Principal / Admin", roleLabel: "College Admin", powers: currentCollege.powers };
             errBox.classList.add('hidden'); openDashboard(); return;
         }
-    } else {
-        if (!schoolPowers.portalActive) { errBox.innerText = isHi ? "⛔ संस्थान पोर्टल बंद है।" : "⛔ Portal inactive."; errBox.classList.remove('hidden'); return; }
+        // 2. कॉलेज स्टाफ यूज़र चेक
         const foundUser = appUsers.find(user => user.username === u && user.password === p);
-        if (foundUser) { loggedUser = { type: 'user', ...foundUser }; errBox.classList.add('hidden'); openDashboard(); return; }
+        if (foundUser) {
+            loggedUser = { type: 'user', ...foundUser };
+            errBox.classList.add('hidden'); openDashboard(); return;
+        }
     }
     errBox.innerText = isHi ? "❌ गलत यूज़रनेम या पासवर्ड!" : "❌ Invalid Username or Password!";
     errBox.classList.remove('hidden');
@@ -141,10 +151,10 @@ function handleLogin(e) {
 function openDashboard() {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('dashboard-screen').classList.remove('hidden');
-    document.getElementById('sidebar-org-name').innerText = loggedUser.type === 'superadmin' ? "VidyaSetu Master" : orgName;
+    document.getElementById('sidebar-org-name').innerText = loggedUser.type === 'superadmin' ? "VidyaSetu Master" : currentCollege.name;
     document.getElementById('sidebar-user-badge').innerText = loggedUser.roleLabel;
     document.getElementById('logged-user-name').innerText = loggedUser.name;
-    document.getElementById('sidebar-logo-box').innerHTML = loggedUser.type === 'superadmin' ? "👑" : (orgLogo ? `<img src="${orgLogo}" class="w-full h-full object-cover">` : "🌉");
+    document.getElementById('sidebar-logo-box').innerHTML = loggedUser.type === 'superadmin' ? "👑" : (currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏫");
 
     updateSidebarStaticText();
     const menu = getDynamicMenuItems();
@@ -161,43 +171,43 @@ function logoutUser() {
     updateLoginScreenLanguage();
 }
 
-function toggleTheme() { document.documentElement.classList.toggle('dark'); }
-
 function getDynamicMenuItems() {
     if (!loggedUser) return [];
     const isHi = currentLang === 'hi';
 
     if (loggedUser.type === 'superadmin') {
         return [
-            { id: 'super_powers', icon: '⚡', label: isHi ? 'संस्थान पावर कंट्रोल' : 'Power Control' },
-            { id: 'super_branding', icon: '🎨', label: isHi ? 'स्कूल नाम व लोगो' : 'Branding & Logo' },
-            { id: 'manage_users', icon: '👥', label: isHi ? 'यूज़र व पासवर्ड प्रबंधन' : 'Manage Users' }
+            { id: 'super_colleges', icon: '🏫', label: isHi ? 'कॉलेज व कस्टम URL' : 'Colleges & Custom URLs' },
+            { id: 'super_leads', icon: '📩', label: isHi ? 'सब्स्क्रिप्शन फॉर्म डेटा' : 'Subscription Leads' }
         ];
     }
+
+    const cp = currentCollege.powers;
     if (loggedUser.type === 'admin') {
         const items = [{ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' }];
-        if (schoolPowers.allowAdmission) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
-        if (schoolPowers.allowFees) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व WhatsApp' : 'Fees & WhatsApp' });
-        if (schoolPowers.allowPayroll) items.push({ id: 'payroll', icon: '💳', label: isHi ? 'शिक्षक व सैलरी स्लिप' : 'Staff & Payroll' });
-        if (schoolPowers.allowAccounts) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
-        if (schoolPowers.allowLibrary) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
-        if (schoolPowers.allowNotices) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
-        if (schoolPowers.allowAttendance) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
-        if (schoolPowers.allowExams) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
+        if (cp.allowAdmission) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
+        if (cp.allowFees) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व WhatsApp' : 'Fees & WhatsApp' });
+        if (cp.allowPayroll) items.push({ id: 'payroll', icon: '💳', label: isHi ? 'शिक्षक व सैलरी स्लिप' : 'Staff & Payroll' });
+        if (cp.allowAccounts) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
+        if (cp.allowLibrary) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
+        if (cp.allowNotices) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
+        if (cp.allowAttendance) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
+        if (cp.allowExams) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
         items.push({ id: 'manage_users', icon: '🔐', label: isHi ? 'स्टाफ यूज़र प्रबंधन' : 'Staff Users & Roles' });
         return items;
     }
+
     const p = loggedUser.powers;
     const items = [];
     if (p.dashboard) items.push({ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' });
-    if (p.students && schoolPowers.allowAdmission) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
-    if (p.fees && schoolPowers.allowFees) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व WhatsApp' : 'Fees & WhatsApp' });
-    if (p.payroll && schoolPowers.allowPayroll) items.push({ id: 'payroll', icon: '💳', label: isHi ? 'शिक्षक व सैलरी स्लिप' : 'Staff & Payroll' });
-    if (p.accounts && schoolPowers.allowAccounts) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
-    if (p.library && schoolPowers.allowLibrary) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
-    if (p.notices && schoolPowers.allowNotices) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
-    if (p.attendance && schoolPowers.allowAttendance) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
-    if (p.exams && schoolPowers.allowExams) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
+    if (p.students && cp.allowAdmission) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
+    if (p.fees && cp.allowFees) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व WhatsApp' : 'Fees & WhatsApp' });
+    if (p.payroll && cp.allowPayroll) items.push({ id: 'payroll', icon: '💳', label: isHi ? 'शिक्षक व सैलरी स्लिप' : 'Staff & Payroll' });
+    if (p.accounts && cp.allowAccounts) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
+    if (p.library && cp.allowLibrary) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
+    if (p.notices && cp.allowNotices) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
+    if (p.attendance && cp.allowAttendance) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
+    if (p.exams && cp.allowExams) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
     return items;
 }
 
@@ -224,13 +234,13 @@ function renderApp() {
         </button>
     `).join('');
 
-    // अलग-अलग डेडिकेटेड फ़ाइलों से स्क्रीन लोड करना
+    // डेडिकेटेड फ़ाइलों से मॉड्यूल लोड करना
+    if (activeTab === 'super_colleges') { mainEl.innerHTML = renderSuperAdminColleges(); return; }
+    if (activeTab === 'super_leads') { mainEl.innerHTML = renderSubscriptionLeadsInbox(); return; }
     if (activeTab === 'dashboard') { mainEl.innerHTML = renderHighTechDashboard(); return; }
     if (activeTab === 'payroll') { mainEl.innerHTML = renderStaffPayrollModule(); return; }
 
     let html = "";
-
-    // यूज़र प्रबंधन (Create + Edit + Delete)
     if (activeTab === 'manage_users') {
         const editObj = editingUserIndex !== null ? appUsers[editingUserIndex] : null;
         html = `
@@ -238,31 +248,31 @@ function renderApp() {
                 <div class="glass-panel p-6 rounded-2xl border ${editObj ? 'border-amber-500/50' : 'border-indigo-500/30'} h-fit">
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="font-extrabold text-lg ${editObj ? 'text-amber-400' : 'text-indigo-400'}">${editObj ? (isHi ? '✏️ यूज़र एडिट करें' : '✏️ Edit User') : (isHi ? '🔐 नया यूज़र बनाएं' : '🔐 Create User')}</h3>
-                        ${editObj ? `<button onclick="editingUserIndex=null; renderApp()" class="text-xs text-rose-400 underline">${isHi ? 'रद्द करें' : 'Cancel'}</button>` : ''}
+                        ${editObj ? `<button onclick="editingUserIndex=null; renderApp()" class="text-xs text-rose-400 underline">Cancel</button>` : ''}
                     </div>
                     <form onsubmit="saveUserForm(event)" class="space-y-3 text-sm">
-                        <input type="text" id="new-u-fullname" required value="${editObj ? editObj.name : ''}" placeholder="${isHi ? 'कर्मचारी का नाम *' : 'Staff Full Name *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                        <input type="text" id="new-u-role" required value="${editObj ? editObj.roleLabel : ''}" placeholder="${isHi ? 'पद (Role) *' : 'Role *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                        <input type="text" id="new-u-fullname" required value="${editObj ? editObj.name : ''}" placeholder="Full Name *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                        <input type="text" id="new-u-role" required value="${editObj ? editObj.roleLabel : ''}" placeholder="Role *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="new-u-username" required value="${editObj ? editObj.username : ''}" placeholder="${isHi ? 'यूज़रनेम *' : 'Username *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                            <input type="text" id="new-u-password" required value="${editObj ? editObj.password : ''}" placeholder="${isHi ? 'पासवर्ड *' : 'Password *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            <input type="text" id="new-u-username" required value="${editObj ? editObj.username : ''}" placeholder="Username *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            <input type="text" id="new-u-password" required value="${editObj ? editObj.password : ''}" placeholder="Password *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-xs bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-dashboard" ${editObj ? (editObj.powers.dashboard ? 'checked' : '') : 'checked'}> 📊 ${isHi ? 'डैशबोर्ड' : 'Dashboard'}</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-students" ${editObj && editObj.powers.students ? 'checked' : ''}> 👨‍🎓 ${isHi ? 'एडमिशन' : 'Admission'}</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-fees" ${editObj && editObj.powers.fees ? 'checked' : ''}> 💰 ${isHi ? 'फीस' : 'Fees'}</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-payroll" ${editObj && editObj.powers.payroll ? 'checked' : ''}> 💳 ${isHi ? 'सैलरी स्लिप' : 'Payroll'}</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-accounts" ${editObj && editObj.powers.accounts ? 'checked' : ''}> 📉 ${isHi ? 'अकाउंट्स' : 'Accounts'}</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-library" ${editObj && editObj.powers.library ? 'checked' : ''}> 🪑 ${isHi ? 'लाइब्रेरी' : 'Library'}</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-notices" ${editObj ? (editObj.powers.notices ? 'checked' : '') : 'checked'}> 📢 ${isHi ? 'नोटिस' : 'Notices'}</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-attendance" ${editObj && editObj.powers.attendance ? 'checked' : ''}> ✅ ${isHi ? 'हाज़िरी' : 'Attendance'}</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-exams" ${editObj && editObj.powers.exams ? 'checked' : ''}> 📝 ${isHi ? 'मार्कशीट' : 'Exams'}</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-dashboard" ${editObj ? (editObj.powers.dashboard ? 'checked' : '') : 'checked'}> Dashboard</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-students" ${editObj && editObj.powers.students ? 'checked' : ''}> Admission</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-fees" ${editObj && editObj.powers.fees ? 'checked' : ''}> Fees</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-payroll" ${editObj && editObj.powers.payroll ? 'checked' : ''}> Payroll</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-accounts" ${editObj && editObj.powers.accounts ? 'checked' : ''}> Accounts</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-library" ${editObj && editObj.powers.library ? 'checked' : ''}> Library</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-notices" ${editObj ? (editObj.powers.notices ? 'checked' : '') : 'checked'}> Notices</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-attendance" ${editObj && editObj.powers.attendance ? 'checked' : ''}> Attendance</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-exams" ${editObj && editObj.powers.exams ? 'checked' : ''}> Exams</label>
                         </div>
-                        <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-xl">${editObj ? (isHi ? '💾 सेव करें' : '💾 Update') : (isHi ? '✅ बनाएं' : '✅ Create')}</button>
+                        <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-xl">${editObj ? '💾 Update' : '✅ Create'}</button>
                     </form>
                 </div>
                 <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-lg">${isHi ? 'सक्रिय यूज़र अकाउंट्स' : 'Active Users'} (${appUsers.length})</h3>
+                    <h3 class="font-bold text-lg">Staff Users (${appUsers.length})</h3>
                     ${appUsers.map((u, idx) => `
                         <div class="p-4 rounded-2xl border border-slate-800 bg-slate-900/50 flex justify-between items-center">
                             <div>
@@ -271,47 +281,11 @@ function renderApp() {
                             </div>
                             <div class="flex gap-2">
                                 <button onclick="editingUserIndex=${idx}; renderApp()" class="bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold">✏️ Edit</button>
-                                <button onclick="deleteAppUser(${idx})" class="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl text-xs font-bold">🗑️</button>
+                                <button onclick="appUsers.splice(${idx},1); saveData(); renderApp()" class="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl text-xs font-bold">🗑️</button>
                             </div>
                         </div>
                     `).join('')}
                 </div>
-            </div>
-        `;
-    }
-    else if (activeTab === 'super_powers') {
-        const list = [
-            { key: 'portalActive', title: isHi ? 'पूरा संस्थान पोर्टल (Master Switch)' : 'Entire Institute Portal', desc: isHi ? 'पोर्टल चालू या बंद करें' : 'Enable/Disable whole institute access' },
-            { key: 'allowAdmission', title: isHi ? 'छात्र एडमिशन' : 'Student Admission', desc: isHi ? 'एडमिशन मॉड्यूल की अनुमति' : 'Allow admission management' },
-            { key: 'allowFees', title: isHi ? 'फीस व WhatsApp' : 'Fees & WhatsApp', desc: isHi ? 'फीस व रसीद मॉड्यूल' : 'Allow fee collection' },
-            { key: 'allowPayroll', title: isHi ? 'शिक्षक व सैलरी स्लिप (Payroll)' : 'Staff & Payroll Module', desc: isHi ? 'स्टाफ हाज़िरी व सैलरी स्लिप' : 'Allow staff salary slip generator' },
-            { key: 'allowAccounts', title: isHi ? 'आमदनी व खर्च' : 'Income & Expenses', desc: isHi ? 'अकाउंट्स लेजर' : 'Allow accounts tracking' },
-            { key: 'allowLibrary', title: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats', desc: isHi ? 'सीट बुकिंग सिस्टम' : 'Allow library seat booking' },
-            { key: 'allowNotices', title: isHi ? 'नोटिस बोर्ड' : 'Notice Board', desc: isHi ? 'डिजिटल सूचना पट्ट' : 'Allow digital notices' },
-            { key: 'allowAttendance', title: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance', desc: isHi ? 'छात्र उपस्थिति रजिस्टर' : 'Allow attendance register' },
-            { key: 'allowExams', title: isHi ? 'मार्कशीट व ID' : 'Exams & ID Cards', desc: isHi ? 'परीक्षा व अंकपत्र' : 'Allow report cards' }
-        ];
-        html = `
-            <h2 class="text-2xl font-extrabold text-purple-400 mb-4">${isHi ? '👑 VidyaSetu मास्टर पावर कंट्रोल' : '👑 VidyaSetu Master Power Control'}</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                ${list.map(item => `
-                    <div class="glass-panel p-5 rounded-2xl border ${schoolPowers[item.key] ? 'border-indigo-500/40' : 'border-rose-500/40 opacity-75'} flex justify-between items-center">
-                        <div><div class="font-bold text-sm">${item.title}</div><p class="text-xs text-slate-400 mt-1">${item.desc}</p></div>
-                        <button onclick="schoolPowers['${item.key}']=!schoolPowers['${item.key}']; saveData(); renderApp()" class="w-14 h-7 rounded-full p-1 transition-colors ${schoolPowers[item.key] ? 'bg-emerald-500' : 'bg-slate-600'}">
-                            <div class="w-5 h-5 rounded-full bg-white transform transition-transform ${schoolPowers[item.key] ? 'translate-x-7' : 'translate-x-0'}"></div>
-                        </button>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-    else if (activeTab === 'super_branding') {
-        html = `
-            <div class="max-w-xl glass-panel p-6 rounded-2xl border border-slate-800 space-y-4">
-                <h3 class="font-bold text-lg text-purple-400">${isHi ? '🎨 संस्थान ब्रांडिंग बदलें' : '🎨 Customize Branding'}</h3>
-                <input type="text" id="brand-org-input" value="${orgName}" class="w-full px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-900 font-bold">
-                <input type="file" accept="image/*" onchange="handleLogoUpload(event)" class="w-full text-xs">
-                <button onclick="saveBranding()" class="bg-purple-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold">${isHi ? '💾 सेव करें' : '💾 Save'}</button>
             </div>
         `;
     }
@@ -356,7 +330,7 @@ function renderApp() {
         html = `
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="glass-panel p-5 rounded-2xl border border-slate-800 h-fit">
-                    <h3 class="font-bold text-lg mb-4 text-indigo-400">${isHi ? '➕ नया एडमिशन' : '➕ New Admission'}</h3>
+                    <h3 class="font-bold text-lg mb-4 text-indigo-400">➕ New Admission</h3>
                     <form onsubmit="addNewStudent(event)" class="space-y-3 text-sm">
                         <input type="text" id="stu-name" required placeholder="Student Name *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
                         <input type="text" id="stu-father" required placeholder="Father Name *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
@@ -486,7 +460,7 @@ function renderApp() {
     mainEl.innerHTML = html;
 }
 
-// सहायक फंक्शन्स
+// Helper Functions
 function saveUserForm(e) {
     e.preventDefault();
     const uData = {
@@ -511,9 +485,6 @@ function saveUserForm(e) {
     else { appUsers.unshift(uData); }
     saveData(); renderApp();
 }
-function deleteAppUser(idx) { appUsers.splice(idx, 1); saveData(); renderApp(); }
-function handleLogoUpload(e) { const f = e.target.files[0]; if (f) { const r = new FileReader(); r.onload = ev => { orgLogo = ev.target.result; saveData(); }; r.readAsDataURL(f); } }
-function saveBranding() { const v = document.getElementById('brand-org-input').value.trim(); if (v) orgName = v; saveData(); alert("Saved!"); }
 function addNewStudent(e) { e.preventDefault(); students.unshift({ id: "STU" + Math.floor(100+Math.random()*900), name: document.getElementById('stu-name').value, father: document.getElementById('stu-father').value, class: document.getElementById('stu-class').value, roll: document.getElementById('stu-roll').value, mobile: document.getElementById('stu-mobile').value || "9800000000", totalFee: Number(document.getElementById('stu-total-fee').value), paidFee: Number(document.getElementById('stu-paid-fee').value), attStatus: "P", attRemark: "", monthlyPercent: 100, marks: { hindi: 85, english: 80, math: 88, science: 84 } }); saveData(); renderApp(); }
 function collectFee(idx) { const due = students[idx].totalFee - students[idx].paidFee; const amt = prompt(`Balance due ₹${due}:`, due); if (amt && !isNaN(amt)) { students[idx].paidFee += Number(amt); saveData(); renderApp(); printReceipt(idx); } }
 function sendWhatsAppReminder(idx) { const s = students[idx]; const due = s.totalFee - s.paidFee; window.open(`https://wa.me/91${s.mobile.replace(/\D/g,'')}?text=${encodeURIComponent(`Dear ${s.father}, ₹${due} fee is pending for ${s.name} at ${orgName}.`)}`, '_blank'); }
@@ -524,4 +495,4 @@ function addNotice(e) { e.preventDefault(); notices.unshift({ id: Date.now(), ti
 function printReceipt(idx) { const s = students[idx]; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-6 rounded-2xl border-2 border-slate-800 max-w-xl mx-auto"><h2 class="text-xl font-bold text-center border-b pb-2 mb-3">${orgName} — Fee Receipt</h2><p class="text-sm"><strong>Student:</strong> ${s.name} | <strong>Paid:</strong> ₹${s.paidFee} | <strong>Due:</strong> ₹${s.totalFee - s.paidFee}</p><button onclick="window.print()" class="no-print mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print</button></div>`; }
 function viewMarksheet(idx) { const s = students[idx]; const t = s.marks.hindi + s.marks.english + s.marks.math + s.marks.science; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-6 rounded-2xl border-2 border-amber-700 max-w-xl mx-auto"><h2 class="text-xl font-bold text-center border-b pb-2 mb-3">${orgName} — Report Card</h2><p class="text-sm"><strong>Student:</strong> ${s.name} | <strong>Total:</strong> ${t} / 400</p><button onclick="window.print()" class="no-print mt-4 bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print</button></div>`; }
 function viewIDCard(idx) { const s = students[idx]; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-5 rounded-2xl border-2 border-indigo-600 max-w-xs mx-auto text-center"><h3 class="font-bold text-indigo-700">${orgName}</h3><div class="text-lg font-bold mt-2">${s.name}</div><div class="text-xs">${s.class} | Roll: ${s.roll}</div></div>`; }
-function exportCSV() { let csv = "Roll,Name,Class,PaidFee\n"; students.forEach(s => { csv += `${s.roll},"${s.name}","${s.class}",${s.paidFee}\n`; }); const l = document.createElement("a"); l.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' })); l.download = `VidyaSetu_Report.csv`; l.click(); }
+function exportCSV() { let csv = "Roll,Name,Class,PaidFee\n"; students.forEach(s => { csv += `${s.roll},"${s.name}","${s.class}",${s.paidFee}\n`; }); const l = document.createElement("a"); l.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' })); l.download = `${orgName}_Report.csv`; l.click(); }
