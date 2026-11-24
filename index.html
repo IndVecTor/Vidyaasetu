@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>नेक्स्ट-जेन ERP क्लाउड प्लेटफॉर्म | अमन कुमार</title>
+    <title>स्मार्ट संस्थान ERP पोर्टल</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -11,18 +11,15 @@
             theme: {
                 extend: {
                     animation: {
-                        'fade-in': 'fadeIn 0.4s ease-out forwards',
-                        'slide-up': 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'fade-in': 'fadeIn 0.35s ease-out forwards',
+                        'slide-up': 'slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        'pulse-slow': 'pulse 5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                     },
                     keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
                         slideUp: {
-                            '0%': { opacity: '0', transform: 'translateY(18px) scale(0.98)' },
-                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+                            '0%': { opacity: '0', transform: 'translateY(16px) scale(0.98)' },
+                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' }
                         }
                     }
                 }
@@ -31,179 +28,127 @@
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Noto Sans Devanagari', sans-serif;
-            overflow-x: hidden;
-        }
-        /* ग्लासमॉर्फिज़्म और आधुनिक कार्ड इफ़ेक्ट */
+        body { font-family: 'Noto Sans Devanagari', sans-serif; overflow-x: hidden; }
         .glass-card {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-        }
-        .dark .glass-card {
-            background: rgba(15, 23, 42, 0.72);
+            background: rgba(255, 255, 255, 0.88);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
         }
-        .hover-lift {
-            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        .dark .glass-card {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
         }
-        .hover-lift:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 14px 30px -10px rgba(99, 102, 241, 0.35);
-        }
-        /* कस्टम स्क्रॉलबार */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
+        .hover-lift { transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+        .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 12px 26px -8px rgba(99, 102, 241, 0.35); }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.4); border-radius: 10px; }
-        @media print {
-            .no-print { display: none !important; }
-        }
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-900 dark:bg-[#070b14] dark:text-slate-100 transition-colors duration-300 relative min-h-screen">
+<body class="bg-slate-100 text-slate-900 dark:bg-[#060913] dark:text-slate-100 transition-colors duration-300 relative min-h-screen">
 
-    <!-- बैकग्राउंड में आधुनिक नियॉन चमक (Ambient Glow) -->
+    <!-- बैकग्राउंड एम्बिएंट लाइट -->
     <div class="no-print fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div class="absolute top-1/3 -right-32 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div class="absolute -bottom-32 left-1/3 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl animate-pulse-slow"></div>
     </div>
 
-    <!-- 1. टॉप हाई-टेक सेल्स व कंट्रोल बार -->
-    <div class="no-print relative z-20 bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-950 text-white text-xs py-2.5 px-4 border-b border-indigo-500/30 flex flex-wrap justify-between items-center gap-2">
-        <div class="flex items-center gap-2">
-            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-            <span><strong>SaaS क्लाउड ERP 2.0:</strong> अपने स्कूल, कॉलेज या लाइब्रेरी के लिए कस्टम पोर्टल बनवाएं — <strong>अमन कुमार (8574210020)</strong></span>
-        </div>
-        <div class="flex items-center gap-2">
-            <button onclick="toggleTheme()" class="bg-white/10 hover:bg-white/20 border border-white/15 px-3 py-1 rounded-full transition">
-                🌓 थीम
-            </button>
-            <button onclick="resetDemoData()" class="bg-rose-500/20 hover:bg-rose-500/40 text-rose-200 border border-rose-500/30 px-3 py-1 rounded-full transition">
-                🔄 रीसेट
-            </button>
-        </div>
-    </div>
-
-    <!-- 2. हाई-टेक लॉगिन व रोल सिलेक्टर स्क्रीन -->
-    <div id="login-screen" class="relative z-10 min-h-[90vh] flex flex-col justify-center items-center p-4 animate-fade-in">
-        <div class="max-w-4xl w-full glass-card rounded-3xl shadow-2xl p-6 sm:p-10 border border-slate-200/80 dark:border-indigo-500/20">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-300 text-xs font-bold px-4 py-1.5 rounded-full mb-3">
-                    ⚡ मल्टी-रोल पावर कंट्रोल • लाइव एनिमेटेड ERP
+    <!-- 1. लॉगिन स्क्रीन (मुख्य होमपेज पर सिर्फ़ यूज़र लॉगिन दिखेगा; गुप्त URL से एडमिन/सुपर एडमिन खुलेगा) -->
+    <div id="login-screen" class="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 animate-fade-in">
+        <div class="max-w-md w-full glass-card rounded-3xl shadow-2xl p-7 sm:p-9 border border-slate-200/80 dark:border-indigo-500/20">
+            
+            <!-- संस्थान का लोगो व नाम -->
+            <div class="text-center mb-7">
+                <div id="login-logo-box" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white mx-auto flex items-center justify-center text-3xl shadow-lg shadow-indigo-500/30 mb-3 overflow-hidden">
+                    🏫
                 </div>
-                <h1 class="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-indigo-500 via-cyan-400 to-purple-500 bg-clip-text text-transparent">
-                    नेक्स्ट-जेन संस्थान ERP क्लाउड
+                <h1 id="login-portal-title" class="text-2xl font-extrabold text-slate-900 dark:text-white">
+                    आदर्श विद्या मंदिर इंटर कॉलेज
                 </h1>
-                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 max-w-xl mx-auto">
-                    नीचे अपने संस्थान का नाम व लोगो सेट करें, या सीधे <strong>सुपर एडमिन</strong> बनकर तय करें कि किस पैनल को कौन-सी पावर देनी है
+                <p id="login-portal-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    कृपया अपने यूज़रनेम और पासवर्ड से लॉगिन करें
                 </p>
             </div>
 
-            <!-- संस्थान कस्टमाइज़ेशन बॉक्स -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 bg-slate-200/60 dark:bg-slate-900/80 p-4 rounded-2xl border border-slate-300/60 dark:border-slate-800">
+            <!-- लॉगिन फॉर्म -->
+            <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                        संस्थान का नाम (Live Preview)
-                    </label>
-                    <input type="text" id="custom-org-name" placeholder="जैसे: आदर्श विद्या मंदिर इंटर कॉलेज" 
-                        class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">यूज़रनेम (Username)</label>
+                    <input type="text" id="login-username" required placeholder="अपना यूज़रनेम डालें" autocomplete="off"
+                        class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition">
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
-                        संस्थान का लोगो अपलोड करें
-                    </label>
-                    <input type="file" id="custom-org-logo" accept="image/*" onchange="handleLogoUpload(event)"
-                        class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer">
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">पासवर्ड (Password)</label>
+                    <input type="password" id="login-password" required placeholder="••••••••"
+                        class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition">
                 </div>
-            </div>
 
-            <!-- 5 पावर-आधारित पैनल कार्ड्स -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-                <!-- 1. Super Admin -->
-                <button onclick="enterDemo('superadmin')" class="hover-lift group relative p-4 rounded-2xl border-2 border-purple-500/60 bg-gradient-to-b from-purple-500/15 to-indigo-500/5 text-left overflow-hidden">
-                    <div class="text-2xl mb-2">👑</div>
-                    <div class="font-extrabold text-sm text-purple-600 dark:text-purple-300">सुपर एडमिन</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">सभी स्कूलों व पावर का मास्टर कंट्रोल</div>
-                    <span class="inline-block mt-2 text-[10px] font-bold bg-purple-600 text-white px-2 py-0.5 rounded-full">मास्टर पावर</span>
-                </button>
+                <div id="login-error" class="hidden text-xs font-bold text-rose-500 bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-center">
+                    गलत यूज़रनेम या पासवर्ड! कृपया पुनः प्रयास करें।
+                </div>
 
-                <!-- 2. School Admin -->
-                <button onclick="enterDemo('admin')" class="hover-lift p-4 rounded-2xl border border-indigo-500/40 bg-indigo-500/10 text-left">
-                    <div class="text-2xl mb-2">🏫</div>
-                    <div class="font-extrabold text-sm text-indigo-600 dark:text-indigo-300">स्कूल एडमिन</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">प्रिंसिपल पैनल, फीस व एडमिशन</div>
-                    <span class="inline-block mt-2 text-[10px] font-bold bg-indigo-600/20 text-indigo-400 px-2 py-0.5 rounded-full">सुपर एडमिन नियंत्रित</span>
+                <button type="submit" id="login-submit-btn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-500/30 transition transform active:scale-[0.98]">
+                    🔐 सुरक्षित लॉगिन करें
                 </button>
+            </form>
 
-                <!-- 3. Teacher -->
-                <button onclick="enterDemo('teacher')" class="hover-lift p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 text-left">
-                    <div class="text-2xl mb-2">👨‍🏫</div>
-                    <div class="font-extrabold text-sm text-emerald-600 dark:text-emerald-300">शिक्षक पैनल</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">केवल हाज़िरी व परीक्षा नंबर</div>
-                    <span class="inline-block mt-2 text-[10px] font-bold bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full">सीमित पावर</span>
-                </button>
-
-                <!-- 4. Library Manager -->
-                <button onclick="enterDemo('library_mgr')" class="hover-lift p-4 rounded-2xl border border-cyan-500/30 bg-cyan-500/5 text-left">
-                    <div class="text-2xl mb-2">🪑</div>
-                    <div class="font-extrabold text-sm text-cyan-600 dark:text-cyan-300">लाइब्रेरी स्टाफ</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">केवल सीट बुकिंग व शिफ्ट मैनेजमेंट</div>
-                    <span class="inline-block mt-2 text-[10px] font-bold bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full">सीट पावर</span>
-                </button>
-
-                <!-- 5. Student -->
-                <button onclick="enterDemo('student')" class="hover-lift p-4 rounded-2xl border border-amber-500/30 bg-amber-500/5 text-left">
-                    <div class="text-2xl mb-2">🎓</div>
-                    <div class="font-extrabold text-sm text-amber-600 dark:text-amber-300">छात्र / अभिभावक</div>
-                    <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-snug">रसीद, मार्कशीट, नोटिस व ID</div>
-                    <span class="inline-block mt-2 text-[10px] font-bold bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">व्यू ओनली</span>
-                </button>
+            <!-- डेमो के लिए छोटे हिंट (असली साइट पर आप इसे हटा सकते हैं) -->
+            <div id="demo-credentials-hint" class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center space-y-1">
+                <!-- JS से वर्तमान URL के हिसाब से हिंट दिखेगा -->
             </div>
         </div>
     </div>
 
-    <!-- 3. आधुनिक साइडबार + डैशबोर्ड लेआउट -->
+    <!-- 2. डायनामिक लेफ्ट साइडबार + मुख्य डैशबोर्ड (लॉगिन के बाद खुलेगा) -->
     <div id="dashboard-screen" class="hidden relative z-10 min-h-screen flex flex-col lg:flex-row">
         
-        <!-- बायां साइडबार (Glass Sidebar) -->
-        <aside class="no-print w-full lg:w-68 glass-card border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 p-4 flex flex-col justify-between shrink-0">
+        <!-- डायनामिक लेफ्ट साइडबार -->
+        <aside id="left-sidebar" class="no-print w-full lg:w-64 glass-card border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800/90 p-4 flex flex-col justify-between shrink-0 transition-all duration-300">
             <div>
-                <!-- संस्थान ब्रांडिंग -->
-                <div class="flex items-center gap-3 pb-4 mb-4 border-b border-slate-200 dark:border-slate-800">
-                    <div id="header-logo-box" class="w-11 h-11 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center font-bold text-xl shadow-lg overflow-hidden shrink-0">
-                        🏫
+                <!-- संस्थान की पहचान -->
+                <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-slate-800">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <div id="sidebar-logo-box" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center font-bold text-lg shadow shrink-0 overflow-hidden">
+                            🏫
+                        </div>
+                        <div class="overflow-hidden">
+                            <h2 id="sidebar-org-name" class="font-bold text-sm text-slate-900 dark:text-white truncate">
+                                आदर्श विद्या मंदिर
+                            </h2>
+                            <span id="sidebar-user-badge" class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 mt-0.5 truncate">
+                                यूज़र पैनल
+                            </span>
+                        </div>
                     </div>
-                    <div class="overflow-hidden">
-                        <h2 id="display-org-name" class="font-bold text-sm text-slate-900 dark:text-white truncate">
-                            आदर्श विद्या मंदिर
-                        </h2>
-                        <span id="display-role-badge" class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 mt-0.5">
-                            एडमिन पैनल
-                        </span>
-                    </div>
+                    <button onclick="toggleTheme()" title="थीम बदलें" class="p-2 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-xs hover:bg-indigo-600 hover:text-white transition">
+                        🌓
+                    </button>
                 </div>
 
-                <!-- साइडबार नेविगेशन मेन्यू -->
-                <nav id="sidebar-nav" class="flex lg:flex-col gap-1.5 overflow-x-auto pb-2 lg:pb-0">
-                    <!-- JS से बटन लोड होंगे -->
+                <!-- डायनामिक मेन्यू लिस्ट (यूज़र की पावर के हिसाब से अपने आप बनेगी) -->
+                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 mb-2">मुख्य मेन्यू</div>
+                <nav id="dynamic-sidebar-nav" class="flex lg:flex-col gap-1.5 overflow-x-auto pb-2 lg:pb-0">
+                    <!-- JS से केवल वही विकल्प आएंगे जिनकी इस यूज़र को अनुमति है -->
                 </nav>
             </div>
 
-            <!-- नीचे रोल बदलने का बटन -->
-            <div class="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800">
-                <button onclick="logoutDemo()" class="w-full flex items-center justify-center gap-2 bg-slate-200/80 dark:bg-slate-800 hover:bg-rose-600 hover:text-white px-4 py-2.5 rounded-xl text-xs font-bold transition">
-                    🚪 पैनल / भूमिका बदलें
+            <!-- नीचे लॉगआउट बटन -->
+            <div class="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
+                <div class="px-2 text-[11px] text-slate-400 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span id="logged-user-name" class="truncate font-semibold">यूज़र सक्रिय</span>
+                </div>
+                <button onclick="logoutUser()" class="w-full flex items-center justify-center gap-2 bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                    🚪 लॉगआउट करें
                 </button>
             </div>
         </aside>
 
-        <!-- दायां मुख्य कार्यक्षेत्र (Animated Main Stage) -->
+        <!-- दायां मुख्य कार्यक्षेत्र -->
         <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
             <div id="main-content" class="max-w-6xl mx-auto animate-slide-up">
-                <!-- JS से एनिमेटेड स्क्रीन लोड होगी -->
+                <!-- डायनामिक कंटेंट यहाँ दिखेगा -->
             </div>
         </main>
     </div>
