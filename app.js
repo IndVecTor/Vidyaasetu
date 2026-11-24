@@ -3,17 +3,11 @@ const portalMode = urlParams.get('portal') || '';
 const collegeSlug = urlParams.get('college') || '';
 
 let currentLang = localStorage.getItem('vidyasetu_lang') || 'en';
-let editingUserIndex = null;
 let selectedAttClass = "ALL";
 let selectedAttDate = new Date().toISOString().split('T')[0];
 
 let currentCollege = null;
 let storagePrefix = `vs_data_default_`;
-
-const defaultUsers = [
-    { id: "USR01", name: "Rajesh Sharma", username: "teacher1", password: "123", roleLabel: "Class Teacher", powers: { dashboard: false, students: false, fees: false, payroll: false, accounts: false, library: false, notices: true, attendance: true, exams: true } },
-    { id: "USR02", name: "Sunita Verma", username: "clerk1", password: "123", roleLabel: "Account Clerk", powers: { dashboard: true, students: true, fees: true, payroll: true, accounts: true, library: false, notices: true, attendance: false, exams: false } }
-];
 
 const superAdminCredentials = { username: "superadmin", password: "123", name: "Aman Kumar (Master Admin)" };
 
@@ -41,7 +35,6 @@ const defaultExpenses = [{ id: 1, title: "Electricity & Internet Bill", amount: 
 const defaultNotices = [{ id: 1, title: "Welcome to Digital Campus", body: "All academic and fee records are now live on VidyaSetu.", date: "24/11/2026" }];
 const defaultSeats = Array.from({ length: 20 }, (_, i) => ({ seatNo: i + 1, status: i === 0 ? "booked" : "available", studentName: i === 0 ? "Aarav Sharma" : "" }));
 
-let appUsers = [];
 let students = [];
 let expenses = [];
 let notices = [];
@@ -59,7 +52,6 @@ function loadCollegeWorkspaceData(colObj) {
     orgName = colObj.name;
     orgLogo = colObj.logo || "";
 
-    appUsers = JSON.parse(localStorage.getItem(storagePrefix + 'users')) || JSON.parse(JSON.stringify(defaultUsers));
     students = JSON.parse(localStorage.getItem(storagePrefix + 'students')) || JSON.parse(JSON.stringify(defaultStudents));
     expenses = JSON.parse(localStorage.getItem(storagePrefix + 'expenses')) || JSON.parse(JSON.stringify(defaultExpenses));
     notices = JSON.parse(localStorage.getItem(storagePrefix + 'notices')) || JSON.parse(JSON.stringify(defaultNotices));
@@ -74,7 +66,6 @@ if (collegeSlug) {
 }
 
 function saveData() {
-    localStorage.setItem(storagePrefix + 'users', JSON.stringify(appUsers));
     localStorage.setItem(storagePrefix + 'students', JSON.stringify(students));
     localStorage.setItem(storagePrefix + 'expenses', JSON.stringify(expenses));
     localStorage.setItem(storagePrefix + 'notices', JSON.stringify(notices));
@@ -220,17 +211,20 @@ function handleLogin(e) {
         loggedUser = { type: 'superadmin', name: superAdminCredentials.name, roleLabel: "Master Owner" };
         errBox.classList.add('hidden'); openDashboard(); return;
     } else if (currentCollege) {
+        // 1. Institute Admin Check
         if (u === currentCollege.adminUser && p === currentCollege.adminPass) {
             loggedUser = { type: 'admin', name: "Institute Admin", roleLabel: "Master Admin", powers: currentCollege.powers };
             errBox.classList.add('hidden'); openDashboard(); return;
         }
-        const foundUser = appUsers.find(user => user.username === u && user.password === p);
-        if (foundUser) {
-            loggedUser = { type: 'user', ...foundUser };
+        // 2. Staff Login Check (केवल वे स्टाफ लॉगिन करेंगे जिन्हें Username व Password दिया गया है)
+        loadCurrentInstituteStaff();
+        const foundStaff = staffList.find(st => st.username && st.password && st.username === u && st.password === p);
+        if (foundStaff) {
+            loggedUser = { type: 'user', name: foundStaff.name, roleLabel: foundStaff.role || "Staff", powers: foundStaff.powers || {} };
             errBox.classList.add('hidden'); openDashboard(); return;
         }
     }
-    errBox.innerText = isHi ? "❌ गलत यूज़रनेम या पासवर्ड!" : "❌ Invalid Username or Password!";
+    errBox.innerText = isHi ? "❌ गलत यूज़रनेम या पासवर्ड (या इस स्टाफ को लॉगिन की अनुमति नहीं है)!" : "❌ Invalid Username/Password or Login Not Enabled!";
     errBox.classList.remove('hidden');
 }
 
@@ -253,7 +247,7 @@ function openDashboard() {
 }
 
 function logoutUser() {
-    loggedUser = null; editingUserIndex = null; superAdminViewingSlug = null;
+    loggedUser = null; editingStaffIndex = null; superAdminViewingSlug = null;
     document.getElementById('login-username').value = "";
     document.getElementById('login-password').value = "";
     document.getElementById('dashboard-screen').classList.add('hidden');
@@ -280,13 +274,13 @@ function getDynamicMenuItems() {
         items.push({ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' });
         if (cp.allowAdmission || superAdminViewingSlug) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
         if (cp.allowFees || superAdminViewingSlug) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व रसीद डैशबोर्ड' : 'Fees & Receipts' });
-        if (cp.allowPayroll || superAdminViewingSlug) items.push({ id: 'payroll', icon: '💳', label: isHi ? 'शिक्षक व सैलरी स्लिप' : 'Staff & Payroll' });
+        // डेडिकेटेड Staff Management बटन (Add Staff + Personal Details + Optional Login + Payroll)
+        if (cp.allowPayroll || superAdminViewingSlug) items.push({ id: 'staff', icon: '👔', label: isHi ? 'स्टाफ प्रबंधन (Staff)' : 'Staff Management' });
         if (cp.allowAccounts || superAdminViewingSlug) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
         if (cp.allowLibrary || superAdminViewingSlug) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
         if (cp.allowNotices || superAdminViewingSlug) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
         if (cp.allowAttendance || superAdminViewingSlug) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
         if (cp.allowExams || superAdminViewingSlug) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
-        items.push({ id: 'manage_users', icon: '🔐', label: isHi ? 'स्टाफ लॉगिन व पावर' : 'Staff Logins & Powers' });
         return items;
     }
 
@@ -295,7 +289,7 @@ function getDynamicMenuItems() {
     if (p.dashboard) items.push({ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' });
     if (p.students && cp.allowAdmission) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
     if (p.fees && cp.allowFees) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व रसीद डैशबोर्ड' : 'Fees & Receipts' });
-    if (p.payroll && cp.allowPayroll) items.push({ id: 'payroll', icon: '💳', label: isHi ? 'शिक्षक व सैलरी स्लिप' : 'Staff & Payroll' });
+    if (p.staff && cp.allowPayroll) items.push({ id: 'staff', icon: '👔', label: isHi ? 'स्टाफ प्रबंधन (Staff)' : 'Staff Management' });
     if (p.accounts && cp.allowAccounts) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
     if (p.library && cp.allowLibrary) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
     if (p.notices && cp.allowNotices) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
@@ -307,7 +301,7 @@ function getDynamicMenuItems() {
 function switchTab(tabId) {
     if (tabId === 'exit_inst_view') { exitSuperAdminInstituteView(); return; }
     activeTab = tabId;
-    editingUserIndex = null;
+    editingStaffIndex = null;
     const main = document.getElementById('main-content');
     main.classList.remove('tab-transition');
     void main.offsetWidth;
@@ -333,63 +327,11 @@ function renderApp() {
     if (activeTab === 'super_leads') { mainEl.innerHTML = renderSubscriptionLeadsInbox(); return; }
     if (activeTab === 'dashboard') { mainEl.innerHTML = renderHighTechDashboard(); return; }
     if (activeTab === 'fees') { mainEl.innerHTML = renderFeesDashboardModule(); return; }
-    if (activeTab === 'payroll') { mainEl.innerHTML = renderStaffPayrollModule(); return; }
+    if (activeTab === 'staff') { mainEl.innerHTML = renderStaffManagementModule(); return; }
 
     let html = "";
 
-    if (activeTab === 'manage_users') {
-        const editObj = editingUserIndex !== null ? appUsers[editingUserIndex] : null;
-        html = `
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-panel p-6 rounded-2xl border ${editObj ? 'border-amber-500/50' : 'border-indigo-500/30'} h-fit">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-extrabold text-lg ${editObj ? 'text-amber-400' : 'text-indigo-400'}">${editObj ? (isHi ? '✏️ स्टाफ लॉगिन एडिट करें' : '✏️ Edit Staff Login') : (isHi ? '🔐 नया स्टाफ यूज़र व पावर बनाएं' : '🔐 Create Unlimited Staff Login')}</h3>
-                        ${editObj ? `<button onclick="editingUserIndex=null; renderApp()" class="text-xs text-rose-400 underline">Cancel</button>` : ''}
-                    </div>
-                    <form onsubmit="saveUserForm(event)" class="space-y-3 text-sm">
-                        <input type="text" id="new-u-fullname" required value="${editObj ? editObj.name : ''}" placeholder="${isHi ? 'कर्मचारी का नाम *' : 'Staff Full Name *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                        <input type="text" id="new-u-role" required value="${editObj ? editObj.roleLabel : ''}" placeholder="${isHi ? 'कस्टम पद लिखें (जैसे: Fees Clerk) *' : 'Custom Role / Post Title *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-indigo-300 font-semibold">
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="new-u-username" required value="${editObj ? editObj.username : ''}" placeholder="${isHi ? 'यूज़रनेम *' : 'Username *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                            <input type="text" id="new-u-password" required value="${editObj ? editObj.password : ''}" placeholder="${isHi ? 'पासवर्ड *' : 'Password *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-xs bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-dashboard" ${editObj ? (editObj.powers.dashboard ? 'checked' : '') : 'checked'}> Dashboard</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-students" ${editObj && editObj.powers.students ? 'checked' : ''}> Admission</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-fees" ${editObj && editObj.powers.fees ? 'checked' : ''}> Fees</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-payroll" ${editObj && editObj.powers.payroll ? 'checked' : ''}> Payroll</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-accounts" ${editObj && editObj.powers.accounts ? 'checked' : ''}> Accounts</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-library" ${editObj && editObj.powers.library ? 'checked' : ''}> Library</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-notices" ${editObj ? (editObj.powers.notices ? 'checked' : '') : 'checked'}> Notices</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-attendance" ${editObj && editObj.powers.attendance ? 'checked' : ''}> Attendance</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-exams" ${editObj && editObj.powers.exams ? 'checked' : ''}> Exams</label>
-                        </div>
-                        <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-xl">${editObj ? '💾 Update Staff' : '✅ Create Staff Login'}</button>
-                    </form>
-                </div>
-
-                <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
-                    <div class="flex justify-between items-center">
-                        <h3 class="font-bold text-lg">${isHi ? 'सक्रिय स्टाफ यूज़र अकाउंट्स' : 'Active Staff Logins'} (${appUsers.length})</h3>
-                        <button onclick="exportStaffLoginsExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
-                    </div>
-                    ${appUsers.map((u, idx) => `
-                        <div class="p-4 rounded-2xl border border-slate-800 bg-slate-900/50 flex flex-wrap justify-between items-center gap-2">
-                            <div>
-                                <div class="font-bold">${u.name} <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full ml-1">${u.roleLabel}</span></div>
-                                <div class="text-xs text-slate-400 mt-1">Login ID: <strong class="text-emerald-400">${u.username}</strong> | Password: <strong class="text-amber-400">${u.password}</strong></div>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="editingUserIndex=${idx}; renderApp()" class="bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold">✏️ Edit</button>
-                                <button onclick="appUsers.splice(${idx},1); saveData(); renderApp()" class="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl text-xs font-bold">🗑️</button>
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    }
-    else if (activeTab === 'attendance') {
+    if (activeTab === 'attendance') {
         const classes = ["ALL", ...new Set(students.map(s => s.class))];
         const filtered = selectedAttClass === "ALL" ? students : students.filter(s => s.class === selectedAttClass);
         html = `
@@ -542,31 +484,6 @@ function renderApp() {
 }
 
 // Helper & Excel Export Functions
-function saveUserForm(e) {
-    e.preventDefault();
-    const uData = {
-        id: editingUserIndex !== null ? appUsers[editingUserIndex].id : "USR" + Date.now(),
-        name: document.getElementById('new-u-fullname').value.trim(),
-        roleLabel: document.getElementById('new-u-role').value.trim(),
-        username: document.getElementById('new-u-username').value.trim(),
-        password: document.getElementById('new-u-password').value.trim(),
-        powers: {
-            dashboard: document.getElementById('p-dashboard').checked,
-            students: document.getElementById('p-students').checked,
-            fees: document.getElementById('p-fees').checked,
-            payroll: document.getElementById('p-payroll').checked,
-            accounts: document.getElementById('p-accounts').checked,
-            library: document.getElementById('p-library').checked,
-            notices: document.getElementById('p-notices').checked,
-            attendance: document.getElementById('p-attendance').checked,
-            exams: document.getElementById('p-exams').checked
-        }
-    };
-    if (editingUserIndex !== null) { appUsers[editingUserIndex] = uData; editingUserIndex = null; }
-    else { appUsers.unshift(uData); }
-    saveData(); renderApp();
-}
-
 function addNewStudent(e) {
     e.preventDefault();
     const initPaid = Number(document.getElementById('stu-paid-fee').value);
@@ -622,9 +539,4 @@ function exportAccountsExcel() {
     let csv = "Date,Expense Description,Amount\n";
     expenses.forEach(ex => { csv += `"${ex.date}","${ex.title}",${ex.amount}\n`; });
     downloadCSVFile(csv, `${orgName}_Expenses_Ledger.csv`);
-}
-function exportStaffLoginsExcel() {
-    let csv = "Staff Name,Custom Post,Username,Password\n";
-    appUsers.forEach(u => { csv += `"${u.name}","${u.roleLabel}","${u.username}","${u.password}"\n`; });
-    downloadCSVFile(csv, `${orgName}_Staff_Logins.csv`);
 }
