@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Institute ERP Portal</title>
+    <title>VidyaSetu ERP | Smart Institute Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,7 +24,7 @@
     <!-- 1. Login Screen -->
     <div id="login-screen" class="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 tab-transition">
         
-        <!-- Top Floating Language & Theme Switcher -->
+        <!-- Top Language & Theme Controls -->
         <div class="mb-4 flex items-center gap-2">
             <button onclick="toggleLanguage()" id="login-lang-btn" class="bg-white/90 dark:bg-slate-800/90 border border-indigo-500/40 text-indigo-600 dark:text-indigo-300 px-4 py-1.5 rounded-full text-xs font-extrabold shadow-lg hover:scale-105 transition">
                 🇮🇳 हिंदी में बदलें
@@ -37,7 +37,10 @@
         <div class="max-w-md w-full glass-panel rounded-3xl shadow-2xl p-7 sm:p-9 border border-slate-200/80 dark:border-indigo-500/20">
             <div class="text-center mb-7">
                 <div id="login-logo-box" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white mx-auto flex items-center justify-center text-3xl shadow-lg mb-3 overflow-hidden">
-                    🏫
+                    🌉
+                </div>
+                <div class="inline-block text-[10px] font-extrabold tracking-widest uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full mb-1">
+                    VidyaSetu ERP
                 </div>
                 <h1 id="login-portal-title" class="text-2xl font-extrabold text-slate-900 dark:text-white">
                     Adarsh Vidya Mandir Inter College
@@ -67,10 +70,13 @@
             </form>
 
             <div id="demo-credentials-hint" class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center"></div>
+            <div class="mt-3 text-center text-[10px] text-slate-500">
+                Powered by <strong class="text-indigo-400">VidyaSetu</strong> • Digital Bridge for Education
+            </div>
         </div>
     </div>
 
-    <!-- 2. Dynamic Left Sidebar + Main Dashboard -->
+    <!-- 2. Dynamic Left Sidebar + Main Workspace -->
     <div id="dashboard-screen" class="hidden relative z-10 min-h-screen flex flex-col lg:flex-row">
         
         <!-- Dynamic Left Sidebar -->
@@ -79,7 +85,7 @@
                 <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-200 dark:border-slate-800">
                     <div class="flex items-center gap-2.5 overflow-hidden">
                         <div id="sidebar-logo-box" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center font-bold text-lg shadow shrink-0 overflow-hidden">
-                            🏫
+                            🌉
                         </div>
                         <div class="overflow-hidden">
                             <h2 id="sidebar-org-name" class="font-bold text-sm text-slate-900 dark:text-white truncate">Adarsh Vidya Mandir</h2>
@@ -88,7 +94,7 @@
                     </div>
                 </div>
 
-                <!-- 1-Click Language & Theme Control Bar inside Sidebar -->
+                <!-- 1-Click Language & Theme Control Bar -->
                 <div class="flex items-center gap-2 mb-4">
                     <button onclick="toggleLanguage()" id="sidebar-lang-btn" class="flex-1 bg-indigo-600/15 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/30 py-1.5 px-2.5 rounded-xl text-xs font-extrabold transition text-center">
                         🇮🇳 हिंदी
@@ -110,6 +116,9 @@
                 <button onclick="logoutUser()" id="btn-logout" class="w-full flex items-center justify-center gap-2 bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 px-4 py-2.5 rounded-xl text-xs font-bold transition">
                     🚪 Logout
                 </button>
+                <div class="text-center text-[10px] text-slate-500 pt-1">
+                    VidyaSetu ERP v4.0
+                </div>
             </div>
         </aside>
 

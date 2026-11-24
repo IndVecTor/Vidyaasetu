@@ -1,5 +1,5 @@
 // =========================================================
-// Bilingual High-Tech Dashboard Module (dashboard.js)
+// VidyaSetu High-Tech Visual Dashboard Module (dashboard.js)
 // =========================================================
 
 function renderHighTechDashboard() {
@@ -13,7 +13,7 @@ function renderHighTechDashboard() {
     const totalExpense = expenses.reduce((s, x) => s + Number(x.amount), 0);
     const netProfit = totalCollected - totalExpense;
 
-    const presentStudents = students.filter(s => s.attendance === "Present").length;
+    const presentStudents = students.filter(s => s.attStatus === "P").length;
     const attPercent = totalStudents > 0 ? Math.round((presentStudents / totalStudents) * 100) : 0;
 
     const bookedSeats = librarySeats.filter(s => s.status === 'booked').length;
@@ -25,7 +25,7 @@ function renderHighTechDashboard() {
             <div class="relative z-10 flex flex-wrap justify-between items-center gap-4">
                 <div>
                     <span class="inline-block bg-white/20 backdrop-blur-md text-[11px] font-bold px-3 py-1 rounded-full mb-2">
-                        ${isHi ? '✨ लाइव कमांड सेंटर • सत्र 2026-27' : '✨ Live Command Center • Session 2026-27'}
+                        🌉 VidyaSetu Live Command Center • 2026-27
                     </span>
                     <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
                         ${isHi ? 'स्वागत है,' : 'Welcome,'} ${loggedUser.name}
