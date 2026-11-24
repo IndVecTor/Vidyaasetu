@@ -16,7 +16,7 @@ if (collegeSlug) {
 const storagePrefix = currentCollege ? `vs_data_${currentCollege.slug}_` : `vs_data_default_`;
 
 const defaultUsers = [
-    { id: "USR01", name: "Rajesh Sharma", username: "teacher1", password: "123", roleLabel: "Teacher", powers: { dashboard: false, students: false, fees: false, payroll: false, accounts: false, library: false, notices: true, attendance: true, exams: true } },
+    { id: "USR01", name: "Rajesh Sharma", username: "teacher1", password: "123", roleLabel: "Senior Teacher", powers: { dashboard: false, students: false, fees: false, payroll: false, accounts: false, library: false, notices: true, attendance: true, exams: true } },
     { id: "USR02", name: "Sunita Verma", username: "clerk1", password: "123", roleLabel: "Office Clerk", powers: { dashboard: true, students: true, fees: true, payroll: true, accounts: true, library: false, notices: true, attendance: false, exams: false } }
 ];
 
@@ -50,14 +50,10 @@ function saveData() {
     localStorage.setItem(storagePrefix + 'seats', JSON.stringify(librarySeats));
 }
 
-// =========================================================================
-// Animated Switches (Language Pill + Sky Theme) अपडेट करना
-// =========================================================================
 function syncAnimatedSwitches() {
     const isHi = currentLang === 'hi';
     const isDark = document.documentElement.classList.contains('dark');
 
-    // Login Pill
     const loginPill = document.getElementById('login-lang-pill');
     if (loginPill) {
         loginPill.classList.toggle('is-hi', isHi);
@@ -65,7 +61,6 @@ function syncAnimatedSwitches() {
         document.getElementById('lbl-pill-hi').className = `lang-pill-label ${isHi ? 'text-white' : 'text-slate-400'}`;
     }
 
-    // Topbar Pill
     const topPill = document.getElementById('topbar-lang-pill');
     if (topPill) {
         topPill.classList.toggle('is-hi', isHi);
@@ -73,7 +68,6 @@ function syncAnimatedSwitches() {
         document.getElementById('top-pill-hi').className = `lang-pill-label ${isHi ? 'text-white' : 'text-slate-400'}`;
     }
 
-    // Theme Icons
     const icon = isDark ? '🌙' : '☀️';
     if (document.getElementById('login-theme-icon')) document.getElementById('login-theme-icon').innerText = icon;
     if (document.getElementById('topbar-theme-icon')) document.getElementById('topbar-theme-icon').innerText = icon;
@@ -177,7 +171,6 @@ function openDashboard() {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('dashboard-screen').classList.remove('hidden');
 
-    // पूरे Top Header Bar में संस्थान का नाम व लोगो सेट करना
     document.getElementById('topbar-org-title').innerText = loggedUser.type === 'superadmin' ? "VidyaSetu Central Master Control" : currentCollege.name;
     document.getElementById('topbar-city-tag').innerText = loggedUser.type === 'superadmin' ? "• Global Admin Console" : `• ${currentCollege.city} • Session 2026-27`;
     document.getElementById('topbar-logo-box').innerHTML = loggedUser.type === 'superadmin' ? "👑" : (currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏫");
@@ -224,7 +217,7 @@ function getDynamicMenuItems() {
         if (cp.allowNotices) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
         if (cp.allowAttendance) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
         if (cp.allowExams) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
-        items.push({ id: 'manage_users', icon: '🔐', label: isHi ? 'स्टाफ यूज़र प्रबंधन' : 'Staff Users & Roles' });
+        items.push({ id: 'manage_users', icon: '🔐', label: isHi ? 'कस्टम पद व स्टाफ लॉगिन' : 'Custom Posts & Logins' });
         return items;
     }
 
@@ -274,48 +267,80 @@ function renderApp() {
     let html = "";
     if (activeTab === 'manage_users') {
         const editObj = editingUserIndex !== null ? appUsers[editingUserIndex] : null;
+        const collegePosts = (currentCollege && currentCollege.customPosts) ? currentCollege.customPosts : ["Vice Principal", "Office Clerk", "Teacher", "Accountant", "Librarian"];
+
         html = `
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-panel p-6 rounded-2xl border ${editObj ? 'border-amber-500/50' : 'border-indigo-500/30'} h-fit">
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-extrabold text-lg ${editObj ? 'text-amber-400' : 'text-indigo-400'}">${editObj ? (isHi ? '✏️ यूज़र एडिट करें' : '✏️ Edit User') : (isHi ? '🔐 नया यूज़र बनाएं' : '🔐 Create User')}</h3>
-                        ${editObj ? `<button onclick="editingUserIndex=null; renderApp()" class="text-xs text-rose-400 underline">Cancel</button>` : ''}
+            <div class="space-y-6">
+                <div class="glass-panel p-5 rounded-2xl border border-indigo-500/30 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h4 class="font-bold text-sm text-indigo-400">${isHi ? '🏷️ संस्थान के कस्टम पद (Custom Posts / Designations)' : '🏷️ Institute Custom Posts / Designations'}</h4>
+                        <div class="flex flex-wrap gap-1.5 mt-2">
+                            ${collegePosts.map((p, pIdx) => `
+                                <span class="inline-flex items-center gap-1.5 bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                                    ${p}
+                                    <button onclick="deleteInstitutePost(${pIdx})" class="text-rose-400 hover:text-rose-300 text-[10px]">✖</button>
+                                </span>
+                            `).join('')}
+                        </div>
                     </div>
-                    <form onsubmit="saveUserForm(event)" class="space-y-3 text-sm">
-                        <input type="text" id="new-u-fullname" required value="${editObj ? editObj.name : ''}" placeholder="Full Name *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                        <input type="text" id="new-u-role" required value="${editObj ? editObj.roleLabel : ''}" placeholder="Role *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="new-u-username" required value="${editObj ? editObj.username : ''}" placeholder="Username *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                            <input type="text" id="new-u-password" required value="${editObj ? editObj.password : ''}" placeholder="Password *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-xs bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-dashboard" ${editObj ? (editObj.powers.dashboard ? 'checked' : '') : 'checked'}> Dashboard</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-students" ${editObj && editObj.powers.students ? 'checked' : ''}> Admission</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-fees" ${editObj && editObj.powers.fees ? 'checked' : ''}> Fees</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-payroll" ${editObj && editObj.powers.payroll ? 'checked' : ''}> Payroll</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-accounts" ${editObj && editObj.powers.accounts ? 'checked' : ''}> Accounts</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-library" ${editObj && editObj.powers.library ? 'checked' : ''}> Library</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-notices" ${editObj ? (editObj.powers.notices ? 'checked' : '') : 'checked'}> Notices</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-attendance" ${editObj && editObj.powers.attendance ? 'checked' : ''}> Attendance</label>
-                            <label class="flex items-center gap-2"><input type="checkbox" id="p-exams" ${editObj && editObj.powers.exams ? 'checked' : ''}> Exams</label>
-                        </div>
-                        <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-xl">${editObj ? '💾 Update' : '✅ Create'}</button>
+                    <form onsubmit="addInstitutePost(event)" class="flex gap-2">
+                        <input type="text" id="inst-new-post" required placeholder="${isHi ? 'नया पद जोड़ें (जैसे: Clerk)' : 'Add new post...'}" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs">
+                        <button type="submit" class="bg-indigo-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold">+ Add Post</button>
                     </form>
                 </div>
-                <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
-                    <h3 class="font-bold text-lg">Staff Users (${appUsers.length})</h3>
-                    ${appUsers.map((u, idx) => `
-                        <div class="p-4 rounded-2xl border border-slate-800 bg-slate-900/50 flex justify-between items-center">
-                            <div>
-                                <div class="font-bold">${u.name} <span class="text-xs text-indigo-400">(${u.roleLabel})</span></div>
-                                <div class="text-xs text-slate-400 mt-1">User: <strong class="text-emerald-400">${u.username}</strong> | Pass: <strong class="text-amber-400">${u.password}</strong></div>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="editingUserIndex=${idx}; renderApp()" class="bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold">✏️ Edit</button>
-                                <button onclick="appUsers.splice(${idx},1); saveData(); renderApp()" class="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl text-xs font-bold">🗑️</button>
-                            </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="glass-panel p-6 rounded-2xl border ${editObj ? 'border-amber-500/50' : 'border-indigo-500/30'} h-fit">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-extrabold text-lg ${editObj ? 'text-amber-400' : 'text-indigo-400'}">${editObj ? (isHi ? '✏️ स्टाफ यूज़र एडिट करें' : '✏️ Edit Staff User') : (isHi ? '🔐 नया स्टाफ लॉगिन बनाएं' : '🔐 Create Staff Login')}</h3>
+                            ${editObj ? `<button onclick="editingUserIndex=null; renderApp()" class="text-xs text-rose-400 underline">Cancel</button>` : ''}
                         </div>
-                    `).join('')}
+                        <form onsubmit="saveUserForm(event)" class="space-y-3 text-sm">
+                            <input type="text" id="new-u-fullname" required value="${editObj ? editObj.name : ''}" placeholder="${isHi ? 'कर्मचारी का पूरा नाम *' : 'Staff Full Name *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-400">${isHi ? 'पद चुनें (Select Custom Post) *' : 'Select Custom Post *'}</label>
+                                <select id="new-u-role" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 font-bold text-indigo-300">
+                                    ${collegePosts.map(p => `<option value="${p}" ${editObj && editObj.roleLabel === p ? 'selected' : ''}>${p}</option>`).join('')}
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="new-u-username" required value="${editObj ? editObj.username : ''}" placeholder="${isHi ? 'यूज़रनेम *' : 'Username *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                                <input type="text" id="new-u-password" required value="${editObj ? editObj.password : ''}" placeholder="${isHi ? 'पासवर्ड *' : 'Password *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            </div>
+
+                            <div class="text-[11px] font-bold text-slate-400 pt-1">${isHi ? 'इस पद के लिए पावर चुनें:' : 'Assign Powers for this Post:'}</div>
+                            <div class="grid grid-cols-2 gap-2 text-xs bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-dashboard" ${editObj ? (editObj.powers.dashboard ? 'checked' : '') : 'checked'}> Dashboard</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-students" ${editObj && editObj.powers.students ? 'checked' : ''}> Admission</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-fees" ${editObj && editObj.powers.fees ? 'checked' : ''}> Fees</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-payroll" ${editObj && editObj.powers.payroll ? 'checked' : ''}> Payroll</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-accounts" ${editObj && editObj.powers.accounts ? 'checked' : ''}> Accounts</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-library" ${editObj && editObj.powers.library ? 'checked' : ''}> Library</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-notices" ${editObj ? (editObj.powers.notices ? 'checked' : '') : 'checked'}> Notices</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-attendance" ${editObj && editObj.powers.attendance ? 'checked' : ''}> Attendance</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-exams" ${editObj && editObj.powers.exams ? 'checked' : ''}> Exams</label>
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-xl">${editObj ? '💾 Update Staff' : '✅ Create Staff Login'}</button>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
+                        <h3 class="font-bold text-lg">${isHi ? 'सक्रिय स्टाफ यूज़र्स' : 'Active Staff Users'} (${appUsers.length})</h3>
+                        ${appUsers.map((u, idx) => `
+                            <div class="p-4 rounded-2xl border border-slate-800 bg-slate-900/50 flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold">${u.name} <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full ml-1">${u.roleLabel}</span></div>
+                                    <div class="text-xs text-slate-400 mt-1">User: <strong class="text-emerald-400">${u.username}</strong> | Pass: <strong class="text-amber-400">${u.password}</strong></div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="editingUserIndex=${idx}; renderApp()" class="bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold">✏️ Edit</button>
+                                    <button onclick="appUsers.splice(${idx},1); saveData(); renderApp()" class="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl text-xs font-bold">🗑️</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
                 </div>
             </div>
         `;
@@ -492,12 +517,35 @@ function renderApp() {
 }
 
 // Helper Functions
+function addInstitutePost(e) {
+    e.preventDefault();
+    const val = document.getElementById('inst-new-post').value.trim();
+    if (!val || !currentCollege) return;
+    if (!currentCollege.customPosts) currentCollege.customPosts = [];
+    if (!currentCollege.customPosts.includes(val)) {
+        currentCollege.customPosts.push(val);
+        let allCols = JSON.parse(localStorage.getItem('vs_colleges_db')) || defaultColleges;
+        const cIdx = allCols.findIndex(c => c.slug === currentCollege.slug);
+        if (cIdx !== -1) { allCols[cIdx] = currentCollege; localStorage.setItem('vs_colleges_db', JSON.stringify(allCols)); }
+    }
+    renderApp();
+}
+
+function deleteInstitutePost(pIdx) {
+    if (!currentCollege || !currentCollege.customPosts) return;
+    currentCollege.customPosts.splice(pIdx, 1);
+    let allCols = JSON.parse(localStorage.getItem('vs_colleges_db')) || defaultColleges;
+    const cIdx = allCols.findIndex(c => c.slug === currentCollege.slug);
+    if (cIdx !== -1) { allCols[cIdx] = currentCollege; localStorage.setItem('vs_colleges_db', JSON.stringify(allCols)); }
+    renderApp();
+}
+
 function saveUserForm(e) {
     e.preventDefault();
     const uData = {
         id: editingUserIndex !== null ? appUsers[editingUserIndex].id : "USR" + Date.now(),
         name: document.getElementById('new-u-fullname').value.trim(),
-        roleLabel: document.getElementById('new-u-role').value.trim(),
+        roleLabel: document.getElementById('new-u-role').value,
         username: document.getElementById('new-u-username').value.trim(),
         password: document.getElementById('new-u-password').value.trim(),
         powers: {
@@ -516,6 +564,7 @@ function saveUserForm(e) {
     else { appUsers.unshift(uData); }
     saveData(); renderApp();
 }
+
 function addNewStudent(e) { e.preventDefault(); students.unshift({ id: "STU" + Math.floor(100+Math.random()*900), name: document.getElementById('stu-name').value, father: document.getElementById('stu-father').value, class: document.getElementById('stu-class').value, roll: document.getElementById('stu-roll').value, mobile: document.getElementById('stu-mobile').value || "9800000000", totalFee: Number(document.getElementById('stu-total-fee').value), paidFee: Number(document.getElementById('stu-paid-fee').value), attStatus: "P", attRemark: "", monthlyPercent: 100, marks: { hindi: 85, english: 80, math: 88, science: 84 } }); saveData(); renderApp(); }
 function collectFee(idx) { const due = students[idx].totalFee - students[idx].paidFee; const amt = prompt(`Balance due ₹${due}:`, due); if (amt && !isNaN(amt)) { students[idx].paidFee += Number(amt); saveData(); renderApp(); printReceipt(idx); } }
 function sendWhatsAppReminder(idx) { const s = students[idx]; const due = s.totalFee - s.paidFee; window.open(`https://wa.me/91${s.mobile.replace(/\D/g,'')}?text=${encodeURIComponent(`Dear ${s.father}, ₹${due} fee is pending for ${s.name} at ${orgName}.`)}`, '_blank'); }
@@ -527,85 +576,3 @@ function printReceipt(idx) { const s = students[idx]; document.getElementById('m
 function viewMarksheet(idx) { const s = students[idx]; const t = s.marks.hindi + s.marks.english + s.marks.math + s.marks.science; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-6 rounded-2xl border-2 border-amber-700 max-w-xl mx-auto"><h2 class="text-xl font-bold text-center border-b pb-2 mb-3">${orgName} — Report Card</h2><p class="text-sm"><strong>Student:</strong> ${s.name} | <strong>Total:</strong> ${t} / 400</p><button onclick="window.print()" class="no-print mt-4 bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print</button></div>`; }
 function viewIDCard(idx) { const s = students[idx]; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-5 rounded-2xl border-2 border-indigo-600 max-w-xs mx-auto text-center"><h3 class="font-bold text-indigo-700">${orgName}</h3><div class="text-lg font-bold mt-2">${s.name}</div><div class="text-xs">${s.class} | Roll: ${s.roll}</div></div>`; }
 function exportCSV() { let csv = "Roll,Name,Class,PaidFee\n"; students.forEach(s => { csv += `${s.roll},"${s.name}","${s.class}",${s.paidFee}\n`; }); const l = document.createElement("a"); l.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' })); l.download = `${orgName}_Report.csv`; l.click(); }
-if (activeTab === 'manage_users') {
-        const editObj = editingUserIndex !== null ? appUsers[editingUserIndex] : null;
-        const collegePosts = (currentCollege && currentCollege.customPosts) ? currentCollege.customPosts : ["Vice Principal", "Office Clerk", "Teacher", "Accountant", "Librarian"];
-
-        html = `
-            <div class="space-y-6">
-                <!-- ऊपर: इस संस्थान के Custom Posts (पद) जोड़ने का बॉक्स -->
-                <div class="glass-panel p-5 rounded-2xl border border-indigo-500/30 flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <h4 class="font-bold text-sm text-indigo-400">${isHi ? '🏷️ संस्थान के कस्टम पद (Custom Posts / Designations)' : '🏷️ Institute Custom Posts / Designations'}</h4>
-                        <div class="flex flex-wrap gap-1.5 mt-2">
-                            ${collegePosts.map((p, pIdx) => `
-                                <span class="inline-flex items-center gap-1.5 bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg text-xs font-semibold">
-                                    ${p}
-                                    <button onclick="deleteInstitutePost(${pIdx})" class="text-rose-400 hover:text-rose-300 text-[10px]">✖</button>
-                                </span>
-                            `).join('')}
-                        </div>
-                    </div>
-                    <form onsubmit="addInstitutePost(event)" class="flex gap-2">
-                        <input type="text" id="inst-new-post" required placeholder="${isHi ? 'नया पद जोड़ें (जैसे: Clerk)' : 'Add new post...'}" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs">
-                        <button type="submit" class="bg-indigo-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold">+ Add Post</button>
-                    </form>
-                </div>
-
-                <!-- नीचे: स्टाफ यूज़र बनाने और पावर देने का फॉर्म -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="glass-panel p-6 rounded-2xl border ${editObj ? 'border-amber-500/50' : 'border-indigo-500/30'} h-fit">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-extrabold text-lg ${editObj ? 'text-amber-400' : 'text-indigo-400'}">${editObj ? (isHi ? '✏️ स्टाफ यूज़र एडिट करें' : '✏️ Edit Staff User') : (isHi ? '🔐 नया स्टाफ लॉगिन बनाएं' : '🔐 Create Staff Login')}</h3>
-                            ${editObj ? `<button onclick="editingUserIndex=null; renderApp()" class="text-xs text-rose-400 underline">Cancel</button>` : ''}
-                        </div>
-                        <form onsubmit="saveUserForm(event)" class="space-y-3 text-sm">
-                            <input type="text" id="new-u-fullname" required value="${editObj ? editObj.name : ''}" placeholder="${isHi ? 'कर्मचारी का पूरा नाम *' : 'Staff Full Name *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                            
-                            <div>
-                                <label class="text-[11px] font-bold text-slate-400">${isHi ? 'पद चुनें (Select Custom Post) *' : 'Select Custom Post *'}</label>
-                                <select id="new-u-role" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 font-bold text-indigo-300">
-                                    ${collegePosts.map(p => `<option value="${p}" ${editObj && editObj.roleLabel === p ? 'selected' : ''}>${p}</option>`).join('')}
-                                </select>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="new-u-username" required value="${editObj ? editObj.username : ''}" placeholder="${isHi ? 'यूज़रनेम *' : 'Username *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                                <input type="text" id="new-u-password" required value="${editObj ? editObj.password : ''}" placeholder="${isHi ? 'पासवर्ड *' : 'Password *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                            </div>
-
-                            <div class="text-[11px] font-bold text-slate-400 pt-1">${isHi ? 'इस पद के लिए पावर चुनें:' : 'Assign Powers for this Post:'}</div>
-                            <div class="grid grid-cols-2 gap-2 text-xs bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-dashboard" ${editObj ? (editObj.powers.dashboard ? 'checked' : '') : 'checked'}> Dashboard</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-students" ${editObj && editObj.powers.students ? 'checked' : ''}> Admission</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-fees" ${editObj && editObj.powers.fees ? 'checked' : ''}> Fees</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-payroll" ${editObj && editObj.powers.payroll ? 'checked' : ''}> Payroll</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-accounts" ${editObj && editObj.powers.accounts ? 'checked' : ''}> Accounts</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-library" ${editObj && editObj.powers.library ? 'checked' : ''}> Library</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-notices" ${editObj ? (editObj.powers.notices ? 'checked' : '') : 'checked'}> Notices</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-attendance" ${editObj && editObj.powers.attendance ? 'checked' : ''}> Attendance</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-exams" ${editObj && editObj.powers.exams ? 'checked' : ''}> Exams</label>
-                            </div>
-                            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-xl">${editObj ? '💾 Update Staff' : '✅ Create Staff Login'}</button>
-                        </form>
-                    </div>
-
-                    <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
-                        <h3 class="font-bold text-lg">${isHi ? 'सक्रिय स्टाफ यूज़र्स' : 'Active Staff Users'} (${appUsers.length})</h3>
-                        ${appUsers.map((u, idx) => `
-                            <div class="p-4 rounded-2xl border border-slate-800 bg-slate-900/50 flex justify-between items-center">
-                                <div>
-                                    <div class="font-bold">${u.name} <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full ml-1">${u.roleLabel}</span></div>
-                                    <div class="text-xs text-slate-400 mt-1">User: <strong class="text-emerald-400">${u.username}</strong> | Pass: <strong class="text-amber-400">${u.password}</strong></div>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button onclick="editingUserIndex=${idx}; renderApp()" class="bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold">✏️ Edit</button>
-                                    <button onclick="appUsers.splice(${idx},1); saveData(); renderApp()" class="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl text-xs font-bold">🗑️</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        `;
-    }
