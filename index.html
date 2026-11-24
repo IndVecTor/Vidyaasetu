@@ -5,62 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>स्मार्ट संस्थान ERP पोर्टल</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    animation: {
-                        'fade-in': 'fadeIn 0.35s ease-out forwards',
-                        'slide-up': 'slideUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-                        'pulse-slow': 'pulse 5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                    },
-                    keyframes: {
-                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
-                        slideUp: {
-                            '0%': { opacity: '0', transform: 'translateY(16px) scale(0.98)' },
-                            '100%': { opacity: '1', transform: 'translateY(0) scale(1)' }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- हमारी अलग एनिमेशन फ़ाइल -->
+    <link rel="stylesheet" href="animations.css">
     <style>
         body { font-family: 'Noto Sans Devanagari', sans-serif; overflow-x: hidden; }
-        .glass-card {
-            background: rgba(255, 255, 255, 0.88);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
-        .dark .glass-card {
-            background: rgba(15, 23, 42, 0.78);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-        }
-        .hover-lift { transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
-        .hover-lift:hover { transform: translateY(-3px); box-shadow: 0 12px 26px -8px rgba(99, 102, 241, 0.35); }
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.4); border-radius: 10px; }
         @media print { .no-print { display: none !important; } }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-900 dark:bg-[#060913] dark:text-slate-100 transition-colors duration-300 relative min-h-screen">
+<body class="bg-slate-100 text-slate-900 dark:bg-[#050811] dark:text-slate-100 transition-colors duration-300 relative min-h-screen">
 
-    <!-- बैकग्राउंड एम्बिएंट लाइट -->
+    <!-- बैकग्राउंड नियॉन प्रकाश -->
     <div class="no-print fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl animate-pulse-slow"></div>
-        <div class="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl animate-pulse-slow"></div>
+        <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- 1. लॉगिन स्क्रीन (मुख्य होमपेज पर सिर्फ़ यूज़र लॉगिन दिखेगा; गुप्त URL से एडमिन/सुपर एडमिन खुलेगा) -->
-    <div id="login-screen" class="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 animate-fade-in">
-        <div class="max-w-md w-full glass-card rounded-3xl shadow-2xl p-7 sm:p-9 border border-slate-200/80 dark:border-indigo-500/20">
-            
-            <!-- संस्थान का लोगो व नाम -->
+    <!-- 1. लॉगिन स्क्रीन -->
+    <div id="login-screen" class="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 tab-transition">
+        <div class="max-w-md w-full glass-panel rounded-3xl shadow-2xl p-7 sm:p-9 border border-slate-200/80 dark:border-indigo-500/20">
             <div class="text-center mb-7">
-                <div id="login-logo-box" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white mx-auto flex items-center justify-center text-3xl shadow-lg shadow-indigo-500/30 mb-3 overflow-hidden">
+                <div id="login-logo-box" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white mx-auto flex items-center justify-center text-3xl shadow-lg mb-3 overflow-hidden">
                     🏫
                 </div>
                 <h1 id="login-portal-title" class="text-2xl font-extrabold text-slate-900 dark:text-white">
@@ -71,7 +37,6 @@
                 </p>
             </div>
 
-            <!-- लॉगिन फॉर्म -->
             <form onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">यूज़रनेम (Username)</label>
@@ -84,59 +49,43 @@
                         class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition">
                 </div>
 
-                <div id="login-error" class="hidden text-xs font-bold text-rose-500 bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-center">
-                    गलत यूज़रनेम या पासवर्ड! कृपया पुनः प्रयास करें।
-                </div>
+                <div id="login-error" class="hidden text-xs font-bold text-rose-500 bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-center"></div>
 
-                <button type="submit" id="login-submit-btn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-indigo-500/30 transition transform active:scale-[0.98]">
+                <button type="submit" id="login-submit-btn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 rounded-xl shadow-lg transition transform active:scale-[0.98]">
                     🔐 सुरक्षित लॉगिन करें
                 </button>
             </form>
 
-            <!-- डेमो के लिए छोटे हिंट (असली साइट पर आप इसे हटा सकते हैं) -->
-            <div id="demo-credentials-hint" class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center space-y-1">
-                <!-- JS से वर्तमान URL के हिसाब से हिंट दिखेगा -->
-            </div>
+            <div id="demo-credentials-hint" class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center"></div>
         </div>
     </div>
 
-    <!-- 2. डायनामिक लेफ्ट साइडबार + मुख्य डैशबोर्ड (लॉगिन के बाद खुलेगा) -->
+    <!-- 2. डायनामिक लेफ्ट साइडबार + मुख्य डैशबोर्ड -->
     <div id="dashboard-screen" class="hidden relative z-10 min-h-screen flex flex-col lg:flex-row">
         
         <!-- डायनामिक लेफ्ट साइडबार -->
-        <aside id="left-sidebar" class="no-print w-full lg:w-64 glass-card border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800/90 p-4 flex flex-col justify-between shrink-0 transition-all duration-300">
+        <aside id="left-sidebar" class="no-print w-full lg:w-64 glass-panel border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800/90 p-4 flex flex-col justify-between shrink-0">
             <div>
-                <!-- संस्थान की पहचान -->
                 <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 dark:border-slate-800">
                     <div class="flex items-center gap-3 overflow-hidden">
                         <div id="sidebar-logo-box" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center font-bold text-lg shadow shrink-0 overflow-hidden">
                             🏫
                         </div>
                         <div class="overflow-hidden">
-                            <h2 id="sidebar-org-name" class="font-bold text-sm text-slate-900 dark:text-white truncate">
-                                आदर्श विद्या मंदिर
-                            </h2>
-                            <span id="sidebar-user-badge" class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 mt-0.5 truncate">
-                                यूज़र पैनल
-                            </span>
+                            <h2 id="sidebar-org-name" class="font-bold text-sm text-slate-900 dark:text-white truncate">आदर्श विद्या मंदिर</h2>
+                            <span id="sidebar-user-badge" class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 mt-0.5 truncate">यूज़र पैनल</span>
                         </div>
                     </div>
-                    <button onclick="toggleTheme()" title="थीम बदलें" class="p-2 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-xs hover:bg-indigo-600 hover:text-white transition">
-                        🌓
-                    </button>
+                    <button onclick="toggleTheme()" title="थीम बदलें" class="p-2 rounded-lg bg-slate-200/70 dark:bg-slate-800 text-xs hover:bg-indigo-600 hover:text-white transition">🌓</button>
                 </div>
 
-                <!-- डायनामिक मेन्यू लिस्ट (यूज़र की पावर के हिसाब से अपने आप बनेगी) -->
                 <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 mb-2">मुख्य मेन्यू</div>
-                <nav id="dynamic-sidebar-nav" class="flex lg:flex-col gap-1.5 overflow-x-auto pb-2 lg:pb-0">
-                    <!-- JS से केवल वही विकल्प आएंगे जिनकी इस यूज़र को अनुमति है -->
-                </nav>
+                <nav id="dynamic-sidebar-nav" class="flex lg:flex-col gap-1.5 overflow-x-auto pb-2 lg:pb-0"></nav>
             </div>
 
-            <!-- नीचे लॉगआउट बटन -->
             <div class="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800 space-y-2">
                 <div class="px-2 text-[11px] text-slate-400 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
                     <span id="logged-user-name" class="truncate font-semibold">यूज़र सक्रिय</span>
                 </div>
                 <button onclick="logoutUser()" class="w-full flex items-center justify-center gap-2 bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 px-4 py-2.5 rounded-xl text-xs font-bold transition">
@@ -145,14 +94,14 @@
             </div>
         </aside>
 
-        <!-- दायां मुख्य कार्यक्षेत्र -->
+        <!-- दायां मुख्य कार्यक्षेत्र (जहाँ हर क्लिक पर सिनेमाई ट्रांज़िशन चलेगा) -->
         <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
-            <div id="main-content" class="max-w-6xl mx-auto animate-slide-up">
-                <!-- डायनामिक कंटेंट यहाँ दिखेगा -->
-            </div>
+            <div id="main-content" class="max-w-6xl mx-auto"></div>
         </main>
     </div>
 
+    <!-- अलग-अलग JS फ़ाइलें क्रम से लोड करें -->
+    <script src="dashboard.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
