@@ -7,7 +7,33 @@ const defaultStudents = [
     { id: "STU105", name: "कबीर खान", father: "इमरान खान", class: "कक्षा 9", roll: "301", mobile: "9876543214", totalFee: 10000, paidFee: 5000, attendance: "उपस्थित", marks: { hindi: 80, english: 76, math: 85, science: 81 } }
 ];
 
+// डमी खर्च (Expenses)
+const defaultExpenses = [
+    { id: 1, title: "स्टाफ व शिक्षक वेतन (मासिक)", category: "वेतन", amount: 22000, date: "05/11/2026" },
+    { id: 2, title: "बिजली एवं इंटरनेट बिल", category: "बिल", amount: 3200, date: "10/11/2026" },
+    { id: 3, title: "स्टेशनरी व प्रिंटिंग खर्च", category: "अन्य", amount: 1500, date: "15/11/2026" }
+];
+
+// डमी डिजिटल नोटिस बोर्ड
+const defaultNotices = [
+    { id: 1, title: "अर्धवार्षिक परीक्षा सूचना", body: "सभी कक्षाओं की अर्धवार्षिक परीक्षाएं आगामी सोमवार से प्रारंभ होंगी। सभी छात्र अपना प्रवेश पत्र प्राप्त कर लें।", date: "20/11/2026", urgent: true },
+    { id: 2, title: "शुल्क जमा करने की अंतिम तिथि", body: "जिन छात्रों की द्वितीय किस्त की फीस बकाया है, वे इस महीने की 30 तारीख तक अवश्य जमा कर दें।", date: "18/11/2026", urgent: false }
+];
+
+// डमी लाइब्रेरी सीट डेटा (1 से 20 सीटें)
+const defaultSeats = Array.from({ length: 20 }, (_, i) => {
+    const seatNo = i + 1;
+    if (seatNo === 1) return { seatNo, status: "booked", studentName: "आरव शर्मा", shift: "सुबह (6 AM - 2 PM)", expiry: "30/11/2026" };
+    if (seatNo === 4) return { seatNo, status: "booked", studentName: "अनन्या वर्मा", shift: "फुल डे (Full Day)", expiry: "05/12/2026" };
+    if (seatNo === 7) return { seatNo, status: "booked", studentName: "रोहन यादव", shift: "शाम (2 PM - 10 PM)", expiry: "28/11/2026" };
+    if (seatNo === 12) return { seatNo, status: "booked", studentName: "प्रिया सिंह", shift: "फुल डे (Full Day)", expiry: "15/12/2026" };
+    return { seatNo, status: "available", studentName: "", shift: "", expiry: "" };
+});
+
 let students = JSON.parse(localStorage.getItem('erp_demo_students')) || defaultStudents;
+let expenses = JSON.parse(localStorage.getItem('erp_demo_expenses')) || defaultExpenses;
+let notices = JSON.parse(localStorage.getItem('erp_demo_notices')) || defaultNotices;
+let librarySeats = JSON.parse(localStorage.getItem('erp_demo_seats')) || defaultSeats;
 let orgName = localStorage.getItem('erp_demo_org') || "आदर्श विद्या मंदिर इंटर कॉलेज";
 let orgLogo = localStorage.getItem('erp_demo_logo') || "";
 let currentRole = "admin";
@@ -15,13 +41,15 @@ let activeTab = "overview";
 
 function saveData() {
     localStorage.setItem('erp_demo_students', JSON.stringify(students));
+    localStorage.setItem('erp_demo_expenses', JSON.stringify(expenses));
+    localStorage.setItem('erp_demo_notices', JSON.stringify(notices));
+    localStorage.setItem('erp_demo_seats', JSON.stringify(librarySeats));
     localStorage.setItem('erp_demo_org', orgName);
     if (orgLogo) {
         localStorage.setItem('erp_demo_logo', orgLogo);
     }
 }
 
-// क्लाइंट के लोगो को पढ़ना और सेव करना
 function handleLogoUpload(event) {
     const file = event.target.files[0];
     if (file) {
@@ -42,14 +70,15 @@ function getLogoHTML(sizeClass = "w-10 h-10") {
 }
 
 function resetDemoData() {
-    if (confirm("क्या आप डेमो डेटा और लोगो को वापस शुरुआती स्थिति में लाना चाहते हैं?")) {
-        localStorage.removeItem('erp_demo_students');
-        localStorage.removeItem('erp_demo_org');
-        localStorage.removeItem('erp_demo_logo');
+    if (confirm("क्या आप डेमो का सारा डेटा (छात्र, खर्च, नोटिस, सीटें) वापस शुरुआती स्थिति में लाना चाहते हैं?")) {
+        localStorage.clear();
         students = JSON.parse(JSON.stringify(defaultStudents));
+        expenses = JSON.parse(JSON.stringify(defaultExpenses));
+        notices = JSON.parse(JSON.stringify(defaultNotices));
+        librarySeats = JSON.parse(JSON.stringify(defaultSeats));
         orgName = "आदर्श विद्या मंदिर इंटर कॉलेज";
         orgLogo = "";
-        alert("डेमो डेटा रीसेट हो गया है!");
+        alert("डेमो डेटा पूरी तरह रीसेट हो गया है!");
         if (!document.getElementById('dashboard-screen').classList.contains('hidden')) {
             document.getElementById('header-logo-box').innerHTML = getLogoHTML("w-11 h-11");
             renderDashboard();
@@ -96,20 +125,24 @@ function renderDashboard() {
     let navHTML = `<div class="no-print flex flex-wrap gap-2 mb-6 border-b border-slate-200 dark:border-slate-700 pb-3">`;
     if (currentRole === 'admin') {
         navHTML += `
-            <button onclick="switchTab('overview')" class="px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === 'overview' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">📊 डैशबोर्ड रिपोर्ट</button>
-            <button onclick="switchTab('students')" class="px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === 'students' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">👨‍🎓 छात्र व नया एडमिशन</button>
-            <button onclick="switchTab('fees')" class="px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === 'fees' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">💰 फीस, रसीद व WhatsApp</button>
-            <button onclick="switchTab('attendance')" class="px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === 'attendance' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">✅ दैनिक हाज़िरी</button>
-            <button onclick="switchTab('exams')" class="px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === 'exams' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">📝 मार्कशीट, नंबर एंट्री व ID</button>
+            <button onclick="switchTab('overview')" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold ${activeTab === 'overview' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">📊 डैशबोर्ड</button>
+            <button onclick="switchTab('students')" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold ${activeTab === 'students' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">👨‍🎓 छात्र व एडमिशन</button>
+            <button onclick="switchTab('fees')" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold ${activeTab === 'fees' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">💰 फीस व WhatsApp</button>
+            <button onclick="switchTab('accounts')" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold ${activeTab === 'accounts' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">📉 आमदनी व खर्च</button>
+            <button onclick="switchTab('library')" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold ${activeTab === 'library' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">🪑 लाइब्रेरी सीटें</button>
+            <button onclick="switchTab('notices')" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold ${activeTab === 'notices' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">📢 नोटिस बोर्ड</button>
+            <button onclick="switchTab('attendance')" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold ${activeTab === 'attendance' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">✅ हाज़िरी</button>
+            <button onclick="switchTab('exams')" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold ${activeTab === 'exams' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 hover:bg-slate-100'}">📝 मार्कशीट व ID</button>
         `;
     } else if (currentRole === 'teacher') {
         navHTML += `
             <button onclick="switchTab('attendance')" class="px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === 'attendance' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-800'}">✅ क्लास हाज़िरी लगाएं</button>
             <button onclick="switchTab('exams')" class="px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === 'exams' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-800'}">📝 नंबर एंट्री व मार्कशीट</button>
+            <button onclick="switchTab('notices')" class="px-4 py-2 rounded-lg text-sm font-semibold ${activeTab === 'notices' ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-800'}">📢 सूचना पट्ट (Notice)</button>
         `;
     } else {
         navHTML += `
-            <button onclick="switchTab('student_portal')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-amber-600 text-white">🎓 मेरी प्रोफ़ाइल, रसीद व रिजल्ट</button>
+            <button onclick="switchTab('student_portal')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-amber-600 text-white">🎓 नोटिस बोर्ड, रसीद, रिजल्ट व आईडी कार्ड</button>
         `;
     }
     navHTML += `</div>`;
@@ -119,52 +152,65 @@ function renderDashboard() {
     // टैब 1: डैशबोर्ड ओवरव्यू
     if (activeTab === 'overview') {
         const totalStudents = students.length;
-        const totalFeeExpected = students.reduce((sum, s) => sum + Number(s.totalFee), 0);
         const totalFeeCollected = students.reduce((sum, s) => sum + Number(s.paidFee), 0);
-        const pendingFee = totalFeeExpected - totalFeeCollected;
-        const presentCount = students.filter(s => s.attendance === "उपस्थित").length;
+        const totalExpense = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+        const netBalance = totalFeeCollected - totalExpense;
+        const bookedSeats = librarySeats.filter(s => s.status === 'booked').length;
 
         bodyHTML = `
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                     <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">कुल पंजीकृत छात्र</p>
                     <h3 class="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">${totalStudents}</h3>
                     <p class="text-xs text-emerald-600 mt-2">सक्रिय सत्र 2026-27</p>
                 </div>
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">कुल जमा फीस</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">कुल आमदनी (फीस संग्रह)</p>
                     <h3 class="text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">₹${totalFeeCollected.toLocaleString('hi-IN')}</h3>
-                    <p class="text-xs text-slate-500 mt-2">कुल लक्ष्य: ₹${totalFeeExpected.toLocaleString('hi-IN')}</p>
+                    <p class="text-xs text-slate-500 mt-2">कुल खर्च: ₹${totalExpense.toLocaleString('hi-IN')}</p>
                 </div>
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">बकाया फीस (Pending)</p>
-                    <h3 class="text-3xl font-bold text-rose-600 dark:text-rose-400 mt-1">₹${pendingFee.toLocaleString('hi-IN')}</h3>
-                    <p class="text-xs text-rose-500 mt-2">WhatsApp रिमाइंडर उपलब्ध</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">शुद्ध बचत (Net Balance)</p>
+                    <h3 class="text-3xl font-bold ${netBalance >= 0 ? 'text-teal-600 dark:text-teal-400' : 'text-rose-600'} mt-1">₹${netBalance.toLocaleString('hi-IN')}</h3>
+                    <p class="text-xs text-slate-500 mt-2">आमदनी घटाव खर्च</p>
                 </div>
                 <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">आज की उपस्थिति</p>
-                    <h3 class="text-3xl font-bold text-amber-600 dark:text-amber-400 mt-1">${presentCount} / ${totalStudents}</h3>
-                    <p class="text-xs text-slate-500 mt-2">${Math.round((presentCount/totalStudents)*100)}% छात्र उपस्थित</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 font-bold">लाइब्रेरी सीट स्थिति</p>
+                    <h3 class="text-3xl font-bold text-amber-600 dark:text-amber-400 mt-1">${bookedSeats} / ${librarySeats.length}</h3>
+                    <p class="text-xs text-slate-500 mt-2">${librarySeats.length - bookedSeats} सीटें खाली हैं</p>
                 </div>
+            </div>
+
+            <!-- नवीनतम नोटिस झलक -->
+            <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 rounded-xl mb-6 flex flex-wrap justify-between items-center gap-3">
+                <div>
+                    <span class="text-xs font-bold bg-amber-600 text-white px-2 py-0.5 rounded mr-2">नवीनतम सूचना</span>
+                    <span class="font-semibold text-sm">${notices[0] ? notices[0].title + " — " + notices[0].body : "कोई नई सूचना नहीं"}</span>
+                </div>
+                <button onclick="switchTab('notices')" class="text-xs font-bold text-amber-700 dark:text-amber-300 underline">सभी नोटिस देखें / जोड़ें →</button>
             </div>
 
             <div class="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700">
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-lg">त्वरित कार्रवाई (Quick Actions)</h3>
-                    <button onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">📥 Excel (CSV) डाउनलोड करें</button>
+                    <h3 class="font-bold text-lg">त्वरित कार्य (Quick Actions)</h3>
+                    <button onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">📥 Excel (CSV) रिपोर्ट डाउनलोड करें</button>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <button onclick="switchTab('students')" class="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-left hover:bg-indigo-100 transition">
                         <div class="font-bold text-indigo-700 dark:text-indigo-300">+ नया एडमिशन जोड़ें</div>
-                        <div class="text-xs text-slate-500 mt-1">नए छात्र का फॉर्म भरें और तुरंत रिकॉर्ड बनाएं</div>
+                        <div class="text-xs text-slate-500 mt-1">नए छात्र का फॉर्म भरें</div>
                     </button>
-                    <button onclick="switchTab('fees')" class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-left hover:bg-emerald-100 transition">
-                        <div class="font-bold text-emerald-700 dark:text-emerald-300">💬 फीस व WhatsApp अलर्ट</div>
-                        <div class="text-xs text-slate-500 mt-1">रसीद निकालें या बकाया फीस का मैसेज भेजें</div>
+                    <button onclick="switchTab('accounts')" class="p-4 rounded-xl bg-teal-50 dark:bg-teal-900/30 text-left hover:bg-teal-100 transition">
+                        <div class="font-bold text-teal-700 dark:text-teal-300">📉 आमदनी व खर्च जोड़ें</div>
+                        <div class="text-xs text-slate-500 mt-1">सैलरी, बिल व मुनाफा देखें</div>
                     </button>
-                    <button onclick="switchTab('exams')" class="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-left hover:bg-amber-100 transition">
-                        <div class="font-bold text-amber-700 dark:text-amber-300">📝 नंबर एंट्री व मार्कशीट</div>
-                        <div class="text-xs text-slate-500 mt-1">परीक्षा के नंबर बदलें और लाइव रिपोर्ट कार्ड बनाएं</div>
+                    <button onclick="switchTab('library')" class="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-left hover:bg-amber-100 transition">
+                        <div class="font-bold text-amber-700 dark:text-amber-300">🪑 लाइब्रेरी सीट बुकिंग</div>
+                        <div class="text-xs text-slate-500 mt-1">खाली और भरी सीटें मैनेज करें</div>
+                    </button>
+                    <button onclick="switchTab('notices')" class="p-4 rounded-xl bg-rose-50 dark:bg-rose-900/30 text-left hover:bg-rose-100 transition">
+                        <div class="font-bold text-rose-700 dark:text-rose-300">📢 नया नोटिस जारी करें</div>
+                        <div class="text-xs text-slate-500 mt-1">छात्रों व अभिभावकों के लिए सूचना</div>
                     </button>
                 </div>
             </div>
@@ -188,7 +234,7 @@ function renderDashboard() {
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="text-xs font-semibold">कक्षा / कोर्स *</label>
+                                <label class="text-xs font-semibold">कक्षा / बैच *</label>
                                 <input type="text" id="stu-class" required placeholder="कक्षा 11" class="w-full mt-1 px-3 py-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm">
                             </div>
                             <div>
@@ -198,11 +244,11 @@ function renderDashboard() {
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="text-xs font-semibold">कुल वार्षिक फीस (₹)</label>
+                                <label class="text-xs font-semibold">कुल शुल्क (₹)</label>
                                 <input type="number" id="stu-total-fee" required value="12000" class="w-full mt-1 px-3 py-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm">
                             </div>
                             <div>
-                                <label class="text-xs font-semibold">अभी जमा फीस (₹)</label>
+                                <label class="text-xs font-semibold">अभी जमा शुल्क (₹)</label>
                                 <input type="number" id="stu-paid-fee" required value="5000" class="w-full mt-1 px-3 py-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-700 text-sm">
                             </div>
                         </div>
@@ -255,7 +301,7 @@ function renderDashboard() {
         `;
     }
 
-    // टैब 3: फीस मैनेजमेंट, रसीद व व्हाट्सएप रिमाइंडर
+    // टैब 3: फीस मैनेजमेंट, रसीद व WhatsApp रिमाइंडर
     else if (activeTab === 'fees') {
         bodyHTML = `
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
@@ -298,7 +344,171 @@ function renderDashboard() {
         `;
     }
 
-    // टैब 4: दैनिक उपस्थिति
+    // टैब 4: आमदनी और खर्च का हिसाब (Income vs Expense)
+    else if (activeTab === 'accounts') {
+        const totalIncome = students.reduce((sum, s) => sum + Number(s.paidFee), 0);
+        const totalExpense = expenses.reduce((sum, e) => sum + Number(e.amount), 0);
+        const netProfit = totalIncome - totalExpense;
+
+        bodyHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-5 rounded-xl">
+                    <div class="text-xs font-bold text-emerald-700 dark:text-emerald-300">कुल आमदनी (फीस से प्राप्त)</div>
+                    <div class="text-2xl font-bold text-emerald-600 mt-1">+ ₹${totalIncome.toLocaleString('hi-IN')}</div>
+                </div>
+                <div class="bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 p-5 rounded-xl">
+                    <div class="text-xs font-bold text-rose-700 dark:text-rose-300">कुल खर्च (वेतन, बिल व अन्य)</div>
+                    <div class="text-2xl font-bold text-rose-600 mt-1">- ₹${totalExpense.toLocaleString('hi-IN')}</div>
+                </div>
+                <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 p-5 rounded-xl">
+                    <div class="text-xs font-bold text-indigo-700 dark:text-indigo-300">शुद्ध मुनाफा / शेष बैलेंस</div>
+                    <div class="text-2xl font-bold ${netProfit >= 0 ? 'text-indigo-600' : 'text-rose-600'} mt-1">₹${netProfit.toLocaleString('hi-IN')}</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 h-fit">
+                    <h3 class="font-bold text-lg mb-4 text-rose-600">➕ नया खर्च दर्ज करें</h3>
+                    <form onsubmit="addExpense(event)" class="space-y-3 text-sm">
+                        <div>
+                            <label class="text-xs font-semibold">खर्च का विवरण *</label>
+                            <input type="text" id="exp-title" required placeholder="जैसे: जनरेटर डीज़ल / सफाई खर्च" class="w-full mt-1 px-3 py-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-700">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold">श्रेणी (Category)</label>
+                            <select id="exp-cat" class="w-full mt-1 px-3 py-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-700">
+                                <option value="वेतन">स्टाफ वेतन (Salary)</option>
+                                <option value="बिल">बिजली / इंटरनेट बिल</option>
+                                <option value="मरम्मत">रखरखाव व मरम्मत</option>
+                                <option value="अन्य">स्टेशनरी व अन्य</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold">खर्च राशि (₹) *</label>
+                            <input type="number" id="exp-amount" required placeholder="1500" class="w-full mt-1 px-3 py-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-700">
+                        </div>
+                        <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 rounded-lg">
+                            💾 खर्च रिकॉर्ड करें
+                        </button>
+                    </form>
+                </div>
+
+                <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 overflow-x-auto">
+                    <h3 class="font-bold text-lg mb-4">संस्थान के खर्चों का ब्यौरा</h3>
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="border-b dark:border-slate-700 text-slate-500 text-xs">
+                                <th class="py-2">दिनांक</th>
+                                <th class="py-2">विवरण</th>
+                                <th class="py-2">श्रेणी</th>
+                                <th class="py-2">राशि (₹)</th>
+                                <th class="py-2">हटाएं</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${expenses.map((ex, idx) => `
+                                <tr class="border-b dark:border-slate-700/50">
+                                    <td class="py-3 text-xs">${ex.date}</td>
+                                    <td class="py-3 font-semibold">${ex.title}</td>
+                                    <td class="py-3"><span class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded text-xs">${ex.category}</span></td>
+                                    <td class="py-3 text-rose-600 font-bold">₹${ex.amount}</td>
+                                    <td class="py-3"><button onclick="deleteExpense(${idx})" class="text-xs text-rose-500 underline">हटाएं</button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    // टैब 5: लाइब्रेरी सीट मैनेजमेंट
+    else if (activeTab === 'library') {
+        const bookedCount = librarySeats.filter(s => s.status === 'booked').length;
+        bodyHTML = `
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
+                    <div>
+                        <h3 class="font-bold text-lg">🪑 सेल्फ-स्टडी लाइब्रेरी सीट मैनेजमेंट</h3>
+                        <p class="text-xs text-slate-500">किसी भी सीट पर क्लिक करके छात्र को आवंटित (Book) या खाली करें</p>
+                    </div>
+                    <div class="flex gap-3 text-xs font-bold">
+                        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">🟢 खाली: ${librarySeats.length - bookedCount}</span>
+                        <span class="px-3 py-1 rounded-full bg-rose-100 text-rose-800">🔴 भरी हुई: ${bookedCount}</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+                    ${librarySeats.map((seat, idx) => `
+                        <div onclick="manageSeat(${idx})" class="cursor-pointer p-4 rounded-xl border-2 transition ${seat.status === 'booked' ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20' : 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100'}">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-base">सीट #${seat.seatNo}</span>
+                                <span class="text-xs font-bold px-2 py-0.5 rounded ${seat.status === 'booked' ? 'bg-rose-600 text-white' : 'bg-emerald-600 text-white'}">
+                                    ${seat.status === 'booked' ? 'बुक है' : 'खाली'}
+                                </span>
+                            </div>
+                            ${seat.status === 'booked' ? `
+                                <div class="text-xs font-bold text-slate-800 dark:text-slate-200 mt-2 truncate">${seat.studentName}</div>
+                                <div class="text-[11px] text-slate-500">${seat.shift}</div>
+                                <div class="text-[10px] text-rose-600 font-semibold mt-1">समाप्ति: ${seat.expiry}</div>
+                            ` : `
+                                <div class="text-xs text-emerald-700 dark:text-emerald-300 mt-3">+ बुकिंग के लिए क्लिक करें</div>
+                            `}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // टैब 6: डिजिटल नोटिस बोर्ड
+    else if (activeTab === 'notices') {
+        bodyHTML = `
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                ${currentRole === 'admin' ? `
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700 h-fit">
+                    <h3 class="font-bold text-lg mb-4 text-amber-600">📢 नया नोटिस / सूचना जारी करें</h3>
+                    <form onsubmit="addNotice(event)" class="space-y-3 text-sm">
+                        <div>
+                            <label class="text-xs font-semibold">सूचना का शीर्षक *</label>
+                            <input type="text" id="not-title" required placeholder="जैसे: कल अवकाश की सूचना" class="w-full mt-1 px-3 py-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-700">
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold">विस्तृत संदेश *</label>
+                            <textarea id="not-body" rows="3" required placeholder="यहाँ पूरी सूचना लिखें..." class="w-full mt-1 px-3 py-2 rounded-lg border dark:border-slate-600 bg-slate-50 dark:bg-slate-700"></textarea>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="not-urgent" class="rounded">
+                            <label for="not-urgent" class="text-xs font-semibold text-rose-600">अति आवश्यक (Urgent) चिह्नित करें</label>
+                        </div>
+                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold py-2.5 rounded-lg">
+                            🚀 नोटिस प्रकाशित करें
+                        </button>
+                    </form>
+                </div>
+                ` : ''}
+
+                <div class="${currentRole === 'admin' ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-4">
+                    <h3 class="font-bold text-lg">📌 संस्थान का डिजिटल सूचना पट्ट (Notice Board)</h3>
+                    ${notices.map((n, idx) => `
+                        <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border-l-4 ${n.urgent ? 'border-rose-600' : 'border-indigo-600'} shadow-sm">
+                            <div class="flex justify-between items-start gap-2">
+                                <div>
+                                    ${n.urgent ? '<span class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded mr-2">अति आवश्यक</span>' : ''}
+                                    <span class="text-xs text-slate-400">दिनांक: ${n.date}</span>
+                                    <h4 class="font-bold text-base mt-1">${n.title}</h4>
+                                </div>
+                                ${currentRole === 'admin' ? `<button onclick="deleteNotice(${idx})" class="text-xs text-rose-500 underline">हटाएं</button>` : ''}
+                            </div>
+                            <p class="text-sm text-slate-600 dark:text-slate-300 mt-2">${n.body}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    // टैब 7: दैनिक उपस्थिति
     else if (activeTab === 'attendance') {
         bodyHTML = `
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700">
@@ -326,9 +536,28 @@ function renderDashboard() {
         `;
     }
 
-    // टैब 5: मार्कशीट, लाइव नंबर एंट्री और आईडी कार्ड
+    // टैब 8: मार्कशीट, लाइव नंबर एंट्री, ID कार्ड व छात्र पोर्टल
     else if (activeTab === 'exams' || activeTab === 'student_portal') {
+        let noticeBanner = '';
+        if (currentRole === 'student') {
+            noticeBanner = `
+                <div class="mb-6 space-y-3">
+                    <h3 class="font-bold text-lg">📢 संस्थान की नवीनतम सूचनाएं (Notice Board)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${notices.map(n => `
+                            <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border-l-4 ${n.urgent ? 'border-rose-600' : 'border-amber-500'} shadow-sm">
+                                <div class="text-xs text-slate-400">${n.date} ${n.urgent ? '• <span class="text-rose-600 font-bold">अति आवश्यक</span>' : ''}</div>
+                                <div class="font-bold text-sm mt-1">${n.title}</div>
+                                <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">${n.body}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
         bodyHTML = `
+            ${noticeBanner}
             <div class="bg-white dark:bg-slate-800 p-5 rounded-xl border border-slate-200 dark:border-slate-700">
                 <h3 class="font-bold text-lg mb-4">🎓 छात्र मार्कशीट, नंबर एंट्री, रसीद व आईडी कार्ड</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -399,7 +628,6 @@ function collectFee(idx) {
     }
 }
 
-// सीधा WhatsApp बकाया रिमाइंडर भेजना
 function sendWhatsAppReminder(idx) {
     const s = students[idx];
     const due = s.totalFee - s.paidFee;
@@ -410,13 +638,83 @@ function sendWhatsAppReminder(idx) {
     window.open(url, '_blank');
 }
 
+// खर्च जोड़ना व हटाना
+function addExpense(e) {
+    e.preventDefault();
+    expenses.unshift({
+        id: Date.now(),
+        title: document.getElementById('exp-title').value,
+        category: document.getElementById('exp-cat').value,
+        amount: Number(document.getElementById('exp-amount').value),
+        date: new Date().toLocaleDateString('hi-IN')
+    });
+    saveData();
+    renderDashboard();
+}
+
+function deleteExpense(idx) {
+    if (confirm("क्या आप इस खर्च का रिकॉर्ड हटाना चाहते हैं?")) {
+        expenses.splice(idx, 1);
+        saveData();
+        renderDashboard();
+    }
+}
+
+// लाइब्रेरी सीट बुकिंग व खाली करना
+function manageSeat(idx) {
+    const seat = librarySeats[idx];
+    if (seat.status === 'booked') {
+        if (confirm(`सीट #${seat.seatNo} वर्तमान में "${seat.studentName}" (${seat.shift}) के नाम बुक है। क्या आप इसे खाली करना चाहते हैं?`)) {
+            librarySeats[idx] = { seatNo: seat.seatNo, status: "available", studentName: "", shift: "", expiry: "" };
+            saveData();
+            renderDashboard();
+        }
+    } else {
+        const studentName = prompt(`सीट #${seat.seatNo} बुक करने के लिए छात्र का नाम लिखें:`);
+        if (studentName && studentName.trim()) {
+            const shift = prompt("शिफ्ट चुनें (जैसे: सुबह 6-2, शाम 2-10, या फुल डे):", "फुल डे (Full Day)") || "फुल डे";
+            librarySeats[idx] = {
+                seatNo: seat.seatNo,
+                status: "booked",
+                studentName: studentName.trim(),
+                shift: shift,
+                expiry: "30/12/2026"
+            };
+            saveData();
+            renderDashboard();
+        }
+    }
+}
+
+// नोटिस जोड़ना व हटाना
+function addNotice(e) {
+    e.preventDefault();
+    notices.unshift({
+        id: Date.now(),
+        title: document.getElementById('not-title').value,
+        body: document.getElementById('not-body').value,
+        date: new Date().toLocaleDateString('hi-IN'),
+        urgent: document.getElementById('not-urgent').checked
+    });
+    saveData();
+    alert("नया नोटिस प्रकाशित हो गया है! यह अब छात्र पोर्टल पर भी दिखेगा।");
+    renderDashboard();
+}
+
+function deleteNotice(idx) {
+    if (confirm("क्या आप यह नोटिस हटाना चाहते हैं?")) {
+        notices.splice(idx, 1);
+        saveData();
+        renderDashboard();
+    }
+}
+
 function toggleAttendance(idx) {
     students[idx].attendance = students[idx].attendance === "उपस्थित" ? "अनुपस्थित" : "उपस्थित";
     saveData();
     renderDashboard();
 }
 
-// टीचर लाइव नंबर एंट्री फॉर्म खोलना
 function openMarksEditor(idx) {
     const s = students[idx];
     const html = `
@@ -463,7 +761,6 @@ function saveStudentMarks(e, idx) {
     viewMarksheet(idx);
 }
 
-// लाइव फीस रसीद (लोगो के साथ)
 function printReceipt(idx) {
     const s = students[idx];
     const logoImg = orgLogo ? `<img src="${orgLogo}" class="w-12 h-12 object-cover rounded-lg mx-auto mb-1">` : '';
@@ -514,7 +811,6 @@ function printReceipt(idx) {
     document.getElementById('modal-area').scrollIntoView({ behavior: 'smooth' });
 }
 
-// डिजिटल मार्कशीट (लोगो के साथ)
 function viewMarksheet(idx) {
     const s = students[idx];
     const total = s.marks.hindi + s.marks.english + s.marks.math + s.marks.science;
@@ -558,7 +854,6 @@ function viewMarksheet(idx) {
     document.getElementById('modal-area').scrollIntoView({ behavior: 'smooth' });
 }
 
-// डिजिटल ID कार्ड (लोगो के साथ)
 function viewIDCard(idx) {
     const s = students[idx];
     const logoImg = orgLogo ? `<img src="${orgLogo}" class="w-8 h-8 object-cover rounded mx-auto mb-1 bg-white p-0.5">` : '';
