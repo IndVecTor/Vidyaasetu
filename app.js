@@ -1,20 +1,18 @@
 const urlParams = new URLSearchParams(window.location.search);
-const portalMode = urlParams.get('portal') || ''; // 'superadmin' या खाली
-const collegeSlug = urlParams.get('college') || ''; // जैसे 'adarsh' या 'sunrise'
+const portalMode = urlParams.get('portal') || '';
+const collegeSlug = urlParams.get('college') || '';
 
 let currentLang = localStorage.getItem('vidyasetu_lang') || 'en';
 let editingUserIndex = null;
 let selectedAttClass = "ALL";
 let selectedAttDate = new Date().toISOString().split('T')[0];
 
-// वर्तमान कॉलेज की पहचान करना (यदि ?college=slug URL में है)
 let currentCollege = null;
 if (collegeSlug) {
     const allCols = JSON.parse(localStorage.getItem('vs_colleges_db')) || defaultColleges;
     currentCollege = allCols.find(c => c.slug === collegeSlug.toLowerCase());
 }
 
-// हर कॉलेज का डेटा अलग की (Storage Key) में रखना ताकि किसी का डेटा मिक्स न हो
 const storagePrefix = currentCollege ? `vs_data_${currentCollege.slug}_` : `vs_data_default_`;
 
 const defaultUsers = [
@@ -53,9 +51,51 @@ function saveData() {
 }
 
 // =========================================================================
-// 1. URL राउटर: तय करना कि कौन-सी स्क्रीन खुलनी है
+// Animated Switches (Language Pill + Sky Theme) अपडेट करना
 // =========================================================================
+function syncAnimatedSwitches() {
+    const isHi = currentLang === 'hi';
+    const isDark = document.documentElement.classList.contains('dark');
+
+    // Login Pill
+    const loginPill = document.getElementById('login-lang-pill');
+    if (loginPill) {
+        loginPill.classList.toggle('is-hi', isHi);
+        document.getElementById('lbl-pill-en').className = `lang-pill-label ${!isHi ? 'text-white' : 'text-slate-400'}`;
+        document.getElementById('lbl-pill-hi').className = `lang-pill-label ${isHi ? 'text-white' : 'text-slate-400'}`;
+    }
+
+    // Topbar Pill
+    const topPill = document.getElementById('topbar-lang-pill');
+    if (topPill) {
+        topPill.classList.toggle('is-hi', isHi);
+        document.getElementById('top-pill-en').className = `lang-pill-label ${!isHi ? 'text-white' : 'text-slate-400'}`;
+        document.getElementById('top-pill-hi').className = `lang-pill-label ${isHi ? 'text-white' : 'text-slate-400'}`;
+    }
+
+    // Theme Icons
+    const icon = isDark ? '🌙' : '☀️';
+    if (document.getElementById('login-theme-icon')) document.getElementById('login-theme-icon').innerText = icon;
+    if (document.getElementById('topbar-theme-icon')) document.getElementById('topbar-theme-icon').innerText = icon;
+}
+
+function toggleLanguage() {
+    currentLang = currentLang === 'en' ? 'hi' : 'en';
+    localStorage.setItem('vidyasetu_lang', currentLang);
+    syncAnimatedSwitches();
+    if (!document.getElementById('landing-view').classList.contains('hidden')) renderVidyaSetuLandingPage();
+    if (!document.getElementById('login-screen').classList.contains('hidden')) updateLoginScreenLanguage();
+    if (loggedUser) { updateSidebarStaticText(); renderApp(); }
+}
+
+function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    syncAnimatedSwitches();
+    if (!document.getElementById('landing-view').classList.contains('hidden')) renderVidyaSetuLandingPage();
+}
+
 window.onload = function() {
+    syncAnimatedSwitches();
     if (portalMode === 'superadmin') {
         document.getElementById('login-screen').classList.remove('hidden');
         updateLoginScreenLanguage();
@@ -65,27 +105,16 @@ window.onload = function() {
             return;
         }
         if (!currentCollege.active) {
-            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-amber-500">⛔ Subscription Suspended</h1><p class="text-sm text-slate-400 mt-2">The portal for <strong>${currentCollege.name}</strong> is currently inactive. Contact VidyaSetu Support.</p></div>`;
+            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-amber-500">⛔ Subscription Suspended</h1><p class="text-sm text-slate-400 mt-2">The portal for <strong>${currentCollege.name}</strong> is currently inactive.</p></div>`;
             return;
         }
         document.getElementById('login-screen').classList.remove('hidden');
         updateLoginScreenLanguage();
     } else {
-        // मुख्य URL: सिर्फ़ VidyaSetu का आधिकारिक होमपेज दिखेगा
         document.getElementById('landing-view').classList.remove('hidden');
         renderVidyaSetuLandingPage();
     }
 };
-
-function toggleLanguage() {
-    currentLang = currentLang === 'en' ? 'hi' : 'en';
-    localStorage.setItem('vidyasetu_lang', currentLang);
-    if (!document.getElementById('landing-view').classList.contains('hidden')) renderVidyaSetuLandingPage();
-    if (!document.getElementById('login-screen').classList.contains('hidden')) updateLoginScreenLanguage();
-    if (loggedUser) { updateSidebarStaticText(); renderApp(); }
-}
-
-function toggleTheme() { document.documentElement.classList.toggle('dark'); }
 
 function updateLoginScreenLanguage() {
     const isHi = currentLang === 'hi';
@@ -95,7 +124,6 @@ function updateLoginScreenLanguage() {
     const hintEl = document.getElementById('demo-credentials-hint');
     const btnEl = document.getElementById('login-submit-btn');
 
-    document.getElementById('login-lang-btn').innerText = isHi ? '🇬🇧 Switch to English' : '🇮🇳 हिंदी में बदलें';
     document.getElementById('lbl-username').innerText = isHi ? 'यूज़रनेम (Username)' : 'Username';
     document.getElementById('lbl-password').innerText = isHi ? 'पासवर्ड (Password)' : 'Password';
     btnEl.innerText = isHi ? '🔐 सुरक्षित लॉगिन करें' : '🔐 Secure Login';
@@ -116,8 +144,7 @@ function updateLoginScreenLanguage() {
 
 function updateSidebarStaticText() {
     const isHi = currentLang === 'hi';
-    document.getElementById('sidebar-lang-btn').innerText = isHi ? '🇬🇧 English' : '🇮🇳 हिंदी';
-    document.getElementById('sidebar-menu-heading').innerText = isHi ? 'मुख्य मेन्यू' : 'Main Menu';
+    document.getElementById('sidebar-menu-heading').innerText = isHi ? 'मुख्य मेन्यू' : 'Navigation Menu';
     document.getElementById('btn-logout').innerText = isHi ? '🚪 लॉगआउट करें' : '🚪 Logout';
 }
 
@@ -132,12 +159,10 @@ function handleLogin(e) {
         loggedUser = { type: 'superadmin', name: superAdminCredentials.name, roleLabel: "Master Owner" };
         errBox.classList.add('hidden'); openDashboard(); return;
     } else if (currentCollege) {
-        // 1. कॉलेज एडमिन (Principal) चेक
         if (u === currentCollege.adminUser && p === currentCollege.adminPass) {
             loggedUser = { type: 'admin', name: "Principal / Admin", roleLabel: "College Admin", powers: currentCollege.powers };
             errBox.classList.add('hidden'); openDashboard(); return;
         }
-        // 2. कॉलेज स्टाफ यूज़र चेक
         const foundUser = appUsers.find(user => user.username === u && user.password === p);
         if (foundUser) {
             loggedUser = { type: 'user', ...foundUser };
@@ -151,11 +176,16 @@ function handleLogin(e) {
 function openDashboard() {
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('dashboard-screen').classList.remove('hidden');
-    document.getElementById('sidebar-org-name').innerText = loggedUser.type === 'superadmin' ? "VidyaSetu Master" : currentCollege.name;
-    document.getElementById('sidebar-user-badge').innerText = loggedUser.roleLabel;
-    document.getElementById('logged-user-name').innerText = loggedUser.name;
-    document.getElementById('sidebar-logo-box').innerHTML = loggedUser.type === 'superadmin' ? "👑" : (currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏫");
 
+    // पूरे Top Header Bar में संस्थान का नाम व लोगो सेट करना
+    document.getElementById('topbar-org-title').innerText = loggedUser.type === 'superadmin' ? "VidyaSetu Central Master Control" : currentCollege.name;
+    document.getElementById('topbar-city-tag').innerText = loggedUser.type === 'superadmin' ? "• Global Admin Console" : `• ${currentCollege.city} • Session 2026-27`;
+    document.getElementById('topbar-logo-box').innerHTML = loggedUser.type === 'superadmin' ? "👑" : (currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏫");
+    
+    document.getElementById('sidebar-user-badge').innerText = `● ${loggedUser.roleLabel}`;
+    document.getElementById('logged-user-name').innerText = loggedUser.name;
+
+    syncAnimatedSwitches();
     updateSidebarStaticText();
     const menu = getDynamicMenuItems();
     activeTab = menu.length > 0 ? menu[0].id : 'no_access';
@@ -177,6 +207,7 @@ function getDynamicMenuItems() {
 
     if (loggedUser.type === 'superadmin') {
         return [
+            { id: 'super_analytics', icon: '📊', label: isHi ? 'सुपर एनालिटिक्स' : 'Super Analytics' },
             { id: 'super_colleges', icon: '🏫', label: isHi ? 'कॉलेज व कस्टम URL' : 'Colleges & Custom URLs' },
             { id: 'super_leads', icon: '📩', label: isHi ? 'सब्स्क्रिप्शन फॉर्म डेटा' : 'Subscription Leads' }
         ];
@@ -234,7 +265,7 @@ function renderApp() {
         </button>
     `).join('');
 
-    // डेडिकेटेड फ़ाइलों से मॉड्यूल लोड करना
+    if (activeTab === 'super_analytics') { mainEl.innerHTML = renderSuperAnalyticsDashboard(); return; }
     if (activeTab === 'super_colleges') { mainEl.innerHTML = renderSuperAdminColleges(); return; }
     if (activeTab === 'super_leads') { mainEl.innerHTML = renderSubscriptionLeadsInbox(); return; }
     if (activeTab === 'dashboard') { mainEl.innerHTML = renderHighTechDashboard(); return; }

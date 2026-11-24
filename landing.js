@@ -4,6 +4,7 @@
 
 function renderVidyaSetuLandingPage() {
     const isHi = currentLang === 'hi';
+    const isDark = document.documentElement.classList.contains('dark');
     const container = document.getElementById('landing-view');
 
     const features = [
@@ -34,11 +35,16 @@ function renderVidyaSetuLandingPage() {
                     <a href="?college=adarsh" class="text-emerald-400 hover:underline">${isHi ? '🚀 लाइव कॉलेज डेमो देखें' : '🚀 Live College Demo'}</a>
                 </nav>
 
-                <div class="flex items-center gap-2">
-                    <button onclick="toggleLanguage()" class="bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 px-3 py-1.5 rounded-full text-xs font-extrabold hover:bg-indigo-600 hover:text-white transition">
-                        ${isHi ? '🇬🇧 English' : '🇮🇳 हिंदी'}
-                    </button>
-                    <button onclick="toggleTheme()" class="p-2 rounded-full bg-slate-200/70 dark:bg-slate-800 text-xs">🌓</button>
+                <!-- Animated Pill Language & Sky Theme Controls -->
+                <div class="flex items-center gap-2.5">
+                    <div onclick="toggleLanguage()" class="lang-pill-switch ${isHi ? 'is-hi' : ''}" title="Switch Language">
+                        <div class="lang-pill-thumb"></div>
+                        <span class="lang-pill-label ${!isHi ? 'text-white' : 'text-slate-400'}">EN</span>
+                        <span class="lang-pill-label ${isHi ? 'text-white' : 'text-slate-400'}">हिं</span>
+                    </div>
+                    <div onclick="toggleTheme()" class="sky-theme-switch" title="Toggle Theme">
+                        <div class="sky-theme-thumb">${isDark ? '🌙' : '☀️'}</div>
+                    </div>
                     <a href="#subscribe" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-full text-xs font-extrabold shadow-lg hover:scale-105 transition">
                         ${isHi ? 'अभी जुड़ें' : 'Book Now'}
                     </a>
@@ -242,7 +248,6 @@ function submitSubscriptionLead(e) {
         status: "New"
     };
 
-    // सुपर एडमिन के इनबॉक्स में सेव करना
     let leads = JSON.parse(localStorage.getItem('vs_subscription_leads')) || [];
     leads.unshift(newLead);
     localStorage.setItem('vs_subscription_leads', JSON.stringify(leads));
