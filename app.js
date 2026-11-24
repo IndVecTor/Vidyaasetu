@@ -18,8 +18,23 @@ const defaultUsers = [
 const superAdminCredentials = { username: "superadmin", password: "123", name: "Aman Kumar (Master Admin)" };
 
 const defaultStudents = [
-    { id: "STU101", name: "Aarav Sharma", father: "Rajesh Sharma", class: "Class 10", roll: "101", mobile: "9876543210", totalFee: 12000, paidFee: 12000, attStatus: "P", attRemark: "On Time", monthlyPercent: 94, marks: { hindi: 88, english: 84, math: 95, science: 91 } },
-    { id: "STU102", name: "Ananya Verma", father: "Suresh Verma", class: "Class 10", roll: "102", mobile: "9876543211", totalFee: 12000, paidFee: 8000, attStatus: "L", attRemark: "Medical Leave", monthlyPercent: 88, marks: { hindi: 92, english: 89, math: 78, science: 85 } }
+    {
+        id: "STU101", name: "Aarav Sharma", father: "Rajesh Sharma", class: "Class 10", roll: "101", mobile: "9876543210",
+        totalFee: 12000, paidFee: 12000, attStatus: "P", attRemark: "On Time", monthlyPercent: 94,
+        feeHistory: [
+            { receiptNo: "REC-48210", date: "2026-11-15", amount: 6000, mode: "UPI / QR", remark: "2nd Final Installment" },
+            { receiptNo: "REC-10492", date: "2026-07-10", amount: 6000, mode: "Cash", remark: "1st Admission Installment" }
+        ],
+        marks: { hindi: 88, english: 84, math: 95, science: 91 }
+    },
+    {
+        id: "STU102", name: "Ananya Verma", father: "Suresh Verma", class: "Class 10", roll: "102", mobile: "9876543211",
+        totalFee: 12000, paidFee: 8000, attStatus: "L", attRemark: "Medical Leave", monthlyPercent: 88,
+        feeHistory: [
+            { receiptNo: "REC-33910", date: "2026-08-05", amount: 8000, mode: "Bank Transfer", remark: "1st Installment" }
+        ],
+        marks: { hindi: 92, english: 89, math: 78, science: 85 }
+    }
 ];
 
 const defaultExpenses = [{ id: 1, title: "Electricity & Internet Bill", amount: 3200, date: "10/11/2026" }];
@@ -36,7 +51,7 @@ let orgLogo = "";
 
 let loggedUser = null;
 let activeTab = "";
-let superAdminViewingSlug = null; // जब Super Admin किसी संस्थान के अंदर पूरा पैनल खोलता है
+let superAdminViewingSlug = null;
 
 function loadCollegeWorkspaceData(colObj) {
     currentCollege = colObj;
@@ -66,9 +81,6 @@ function saveData() {
     localStorage.setItem(storagePrefix + 'seats', JSON.stringify(librarySeats));
 }
 
-// =========================================================================
-// Super Admin द्वारा किसी भी संस्थान का पूरा पैनल खोलना व वापस लौटना
-// =========================================================================
 function enterSuperAdminInstituteView(slug) {
     const allCols = JSON.parse(localStorage.getItem('vs_colleges_db')) || defaultColleges;
     const targetCol = allCols.find(c => c.slug === slug);
@@ -98,7 +110,6 @@ function exitSuperAdminInstituteView() {
     switchTab('super_colleges');
 }
 
-// Universal Excel (CSV) Downloader
 function downloadCSVFile(csvContent, fileName) {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }));
@@ -254,7 +265,6 @@ function getDynamicMenuItems() {
     if (!loggedUser) return [];
     const isHi = currentLang === 'hi';
 
-    // यदि Super Admin सामान्य मोड में है
     if (loggedUser.type === 'superadmin' && !superAdminViewingSlug) {
         return [
             { id: 'super_analytics', icon: '📊', label: isHi ? 'सुपर एनालिटिक्स' : 'Super Analytics' },
@@ -263,16 +273,13 @@ function getDynamicMenuItems() {
         ];
     }
 
-    // यदि Institute Admin है OR Super Admin किसी संस्थान का Full View देख रहा है
     const cp = currentCollege.powers;
     if (loggedUser.type === 'admin' || (loggedUser.type === 'superadmin' && superAdminViewingSlug)) {
         const items = [];
-        if (superAdminViewingSlug) {
-            items.push({ id: 'exit_inst_view', icon: '🔙', label: isHi ? 'सुपर एडमिन पर लौटें' : 'Back to Super Admin' });
-        }
+        if (superAdminViewingSlug) items.push({ id: 'exit_inst_view', icon: '🔙', label: isHi ? 'सुपर एडमिन पर लौटें' : 'Back to Super Admin' });
         items.push({ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' });
         if (cp.allowAdmission || superAdminViewingSlug) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
-        if (cp.allowFees || superAdminViewingSlug) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व WhatsApp' : 'Fees & WhatsApp' });
+        if (cp.allowFees || superAdminViewingSlug) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व रसीद डैशबोर्ड' : 'Fees & Receipts' });
         if (cp.allowPayroll || superAdminViewingSlug) items.push({ id: 'payroll', icon: '💳', label: isHi ? 'शिक्षक व सैलरी स्लिप' : 'Staff & Payroll' });
         if (cp.allowAccounts || superAdminViewingSlug) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
         if (cp.allowLibrary || superAdminViewingSlug) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
@@ -283,12 +290,11 @@ function getDynamicMenuItems() {
         return items;
     }
 
-    // सामान्य स्टाफ यूज़र
     const p = loggedUser.powers;
     const items = [];
     if (p.dashboard) items.push({ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' });
     if (p.students && cp.allowAdmission) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
-    if (p.fees && cp.allowFees) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व WhatsApp' : 'Fees & WhatsApp' });
+    if (p.fees && cp.allowFees) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व रसीद डैशबोर्ड' : 'Fees & Receipts' });
     if (p.payroll && cp.allowPayroll) items.push({ id: 'payroll', icon: '💳', label: isHi ? 'शिक्षक व सैलरी स्लिप' : 'Staff & Payroll' });
     if (p.accounts && cp.allowAccounts) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
     if (p.library && cp.allowLibrary) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
@@ -326,11 +332,11 @@ function renderApp() {
     if (activeTab === 'super_colleges') { mainEl.innerHTML = renderSuperAdminColleges(); return; }
     if (activeTab === 'super_leads') { mainEl.innerHTML = renderSubscriptionLeadsInbox(); return; }
     if (activeTab === 'dashboard') { mainEl.innerHTML = renderHighTechDashboard(); return; }
+    if (activeTab === 'fees') { mainEl.innerHTML = renderFeesDashboardModule(); return; }
     if (activeTab === 'payroll') { mainEl.innerHTML = renderStaffPayrollModule(); return; }
 
     let html = "";
 
-    // 1. असीमित स्टाफ लॉगिन व कस्टम रोल/पावर (बिना किसी Forced Default Post के)
     if (activeTab === 'manage_users') {
         const editObj = editingUserIndex !== null ? appUsers[editingUserIndex] : null;
         html = `
@@ -340,15 +346,13 @@ function renderApp() {
                         <h3 class="font-extrabold text-lg ${editObj ? 'text-amber-400' : 'text-indigo-400'}">${editObj ? (isHi ? '✏️ स्टाफ लॉगिन एडिट करें' : '✏️ Edit Staff Login') : (isHi ? '🔐 नया स्टाफ यूज़र व पावर बनाएं' : '🔐 Create Unlimited Staff Login')}</h3>
                         ${editObj ? `<button onclick="editingUserIndex=null; renderApp()" class="text-xs text-rose-400 underline">Cancel</button>` : ''}
                     </div>
-                    <p class="text-[11px] text-slate-400 mb-3">${isHi ? 'हर कर्मचारी का नाम, उसका कस्टम पद, अलग यूज़रनेम-पासवर्ड और उसकी पावर खुद तय करें' : 'Assign custom post title, individual username/password & specific module powers'}</p>
                     <form onsubmit="saveUserForm(event)" class="space-y-3 text-sm">
                         <input type="text" id="new-u-fullname" required value="${editObj ? editObj.name : ''}" placeholder="${isHi ? 'कर्मचारी का नाम *' : 'Staff Full Name *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                        <input type="text" id="new-u-role" required value="${editObj ? editObj.roleLabel : ''}" placeholder="${isHi ? 'कस्टम पद लिखें (जैसे: Fees Clerk / Bus Incharge) *' : 'Custom Role / Post Title *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-indigo-300 font-semibold">
+                        <input type="text" id="new-u-role" required value="${editObj ? editObj.roleLabel : ''}" placeholder="${isHi ? 'कस्टम पद लिखें (जैसे: Fees Clerk) *' : 'Custom Role / Post Title *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-indigo-300 font-semibold">
                         <div class="grid grid-cols-2 gap-2">
                             <input type="text" id="new-u-username" required value="${editObj ? editObj.username : ''}" placeholder="${isHi ? 'यूज़रनेम *' : 'Username *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
                             <input type="text" id="new-u-password" required value="${editObj ? editObj.password : ''}" placeholder="${isHi ? 'पासवर्ड *' : 'Password *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
                         </div>
-                        <div class="text-[11px] font-bold text-slate-400 pt-1">${isHi ? 'इस व्यक्ति को मिलने वाली शक्तियाँ (Powers):' : 'Select Powers for this Staff:'}</div>
                         <div class="grid grid-cols-2 gap-2 text-xs bg-slate-900/50 p-3 rounded-xl border border-slate-800">
                             <label class="flex items-center gap-2"><input type="checkbox" id="p-dashboard" ${editObj ? (editObj.powers.dashboard ? 'checked' : '') : 'checked'}> Dashboard</label>
                             <label class="flex items-center gap-2"><input type="checkbox" id="p-students" ${editObj && editObj.powers.students ? 'checked' : ''}> Admission</label>
@@ -385,7 +389,6 @@ function renderApp() {
             </div>
         `;
     }
-    // 2. Smart Attendance + Excel Export
     else if (activeTab === 'attendance') {
         const classes = ["ALL", ...new Set(students.map(s => s.class))];
         const filtered = selectedAttClass === "ALL" ? students : students.filter(s => s.class === selectedAttClass);
@@ -424,7 +427,6 @@ function renderApp() {
             </div>
         `;
     }
-    // 3. Students & Admission + Excel Export
     else if (activeTab === 'students') {
         html = `
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -438,11 +440,11 @@ function renderApp() {
                             <input type="text" id="stu-roll" required placeholder="Roll *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
                         </div>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="stu-total-fee" required value="12000" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                            <input type="number" id="stu-paid-fee" required value="5000" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            <input type="number" id="stu-total-fee" required value="12000" placeholder="Total Fee" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            <input type="number" id="stu-paid-fee" required value="5000" placeholder="Initial Paid" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
                         </div>
                         <input type="text" id="stu-mobile" placeholder="WhatsApp No." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl">✅ Save</button>
+                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl">✅ Save Admission</button>
                     </form>
                 </div>
                 <div class="lg:col-span-2 glass-panel p-5 rounded-2xl border border-slate-800 overflow-x-auto">
@@ -469,37 +471,6 @@ function renderApp() {
             </div>
         `;
     }
-    // 4. Fees & WhatsApp + Excel Export
-    else if (activeTab === 'fees') {
-        html = `
-            <div class="glass-panel p-5 rounded-2xl border border-slate-800 overflow-x-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-lg">💰 Fees & WhatsApp</h3>
-                    <button onclick="exportFeesExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
-                </div>
-                <table class="w-full text-left text-sm">
-                    <tbody>
-                        ${students.map((s, idx) => {
-                            const due = s.totalFee - s.paidFee;
-                            return `
-                                <tr class="border-b border-slate-800/50">
-                                    <td class="py-3 font-bold">${s.name}</td>
-                                    <td class="py-3 text-emerald-400 font-bold">Paid: ₹${s.paidFee}</td>
-                                    <td class="py-3 text-rose-400 font-bold">Due: ₹${due}</td>
-                                    <td class="py-3 flex gap-2">
-                                        ${due > 0 ? `<button onclick="collectFee(${idx})" class="bg-emerald-600 text-white px-2.5 py-1 rounded text-xs font-bold">+ Pay</button><button onclick="sendWhatsAppReminder(${idx})" class="bg-green-500 text-white px-2.5 py-1 rounded text-xs font-bold">💬 WhatsApp</button>` : ''}
-                                        <button onclick="printReceipt(${idx})" class="bg-indigo-600 text-white px-2.5 py-1 rounded text-xs font-bold">🧾 Receipt</button>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            </div>
-            <div id="modal-area" class="mt-6"></div>
-        `;
-    }
-    // 5. Accounts + Excel Export
     else if (activeTab === 'accounts') {
         const inc = students.reduce((s, x) => s + Number(x.paidFee), 0);
         const exp = expenses.reduce((s, x) => s + Number(x.amount), 0);
@@ -522,7 +493,6 @@ function renderApp() {
             </div>
         `;
     }
-    // 6. Library
     else if (activeTab === 'library') {
         html = `
             <div class="glass-panel p-6 rounded-2xl border border-slate-800">
@@ -538,7 +508,6 @@ function renderApp() {
             </div>
         `;
     }
-    // 7. Notices
     else if (activeTab === 'notices') {
         html = `
             <div class="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
@@ -551,7 +520,6 @@ function renderApp() {
             </div>
         `;
     }
-    // 8. Exams
     else if (activeTab === 'exams') {
         html = `
             <div class="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
@@ -599,27 +567,51 @@ function saveUserForm(e) {
     saveData(); renderApp();
 }
 
-function addNewStudent(e) { e.preventDefault(); students.unshift({ id: "STU" + Math.floor(100+Math.random()*900), name: document.getElementById('stu-name').value, father: document.getElementById('stu-father').value, class: document.getElementById('stu-class').value, roll: document.getElementById('stu-roll').value, mobile: document.getElementById('stu-mobile').value || "9800000000", totalFee: Number(document.getElementById('stu-total-fee').value), paidFee: Number(document.getElementById('stu-paid-fee').value), attStatus: "P", attRemark: "", monthlyPercent: 100, marks: { hindi: 85, english: 80, math: 88, science: 84 } }); saveData(); renderApp(); }
-function collectFee(idx) { const due = students[idx].totalFee - students[idx].paidFee; const amt = prompt(`Balance due ₹${due}:`, due); if (amt && !isNaN(amt)) { students[idx].paidFee += Number(amt); saveData(); renderApp(); printReceipt(idx); } }
+function addNewStudent(e) {
+    e.preventDefault();
+    const initPaid = Number(document.getElementById('stu-paid-fee').value);
+    const todayStr = new Date().toISOString().split('T')[0];
+    students.unshift({
+        id: "STU" + Math.floor(100 + Math.random() * 900),
+        name: document.getElementById('stu-name').value,
+        father: document.getElementById('stu-father').value,
+        class: document.getElementById('stu-class').value,
+        roll: document.getElementById('stu-roll').value,
+        mobile: document.getElementById('stu-mobile').value || "9800000000",
+        totalFee: Number(document.getElementById('stu-total-fee').value),
+        paidFee: initPaid,
+        feeHistory: initPaid > 0 ? [{ receiptNo: "REC-" + Math.floor(10000 + Math.random() * 90000), date: todayStr, amount: initPaid, mode: "Cash", remark: "Admission Fee" }] : [],
+        attStatus: "P", attRemark: "", monthlyPercent: 100,
+        marks: { hindi: 85, english: 80, math: 88, science: 84 }
+    });
+    saveData(); renderApp();
+}
+
 function sendWhatsAppReminder(idx) { const s = students[idx]; const due = s.totalFee - s.paidFee; window.open(`https://wa.me/91${s.mobile.replace(/\D/g,'')}?text=${encodeURIComponent(`Dear ${s.father}, ₹${due} fee is pending for ${s.name} at ${orgName}.`)}`, '_blank'); }
 function sendAbsentWhatsApp(idx) { const s = students[idx]; window.open(`https://wa.me/91${s.mobile.replace(/\D/g,'')}?text=${encodeURIComponent(`Dear ${s.father}, your ward ${s.name} is ABSENT today (${selectedAttDate}) at ${orgName}.`)}`, '_blank'); }
 function addExpense(e) { e.preventDefault(); expenses.unshift({ id: Date.now(), title: document.getElementById('exp-title').value, amount: Number(document.getElementById('exp-amount').value), date: new Date().toLocaleDateString('en-IN') }); saveData(); renderApp(); }
 function manageSeat(idx) { const seat = librarySeats[idx]; if (seat.status === 'booked') librarySeats[idx] = { seatNo: seat.seatNo, status: "available", studentName: "" }; else { const n = prompt("Student Name:"); if (n) librarySeats[idx] = { seatNo: seat.seatNo, status: "booked", studentName: n }; } saveData(); renderApp(); }
 function addNotice(e) { e.preventDefault(); notices.unshift({ id: Date.now(), title: document.getElementById('not-title').value, body: document.getElementById('not-body').value, date: new Date().toLocaleDateString('en-IN') }); saveData(); renderApp(); }
-function printReceipt(idx) { const s = students[idx]; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-6 rounded-2xl border-2 border-slate-800 max-w-xl mx-auto"><h2 class="text-xl font-bold text-center border-b pb-2 mb-3">${orgName} — Fee Receipt</h2><p class="text-sm"><strong>Student:</strong> ${s.name} | <strong>Paid:</strong> ₹${s.paidFee} | <strong>Due:</strong> ₹${s.totalFee - s.paidFee}</p><button onclick="window.print()" class="no-print mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print</button></div>`; }
-function viewMarksheet(idx) { const s = students[idx]; const t = s.marks.hindi + s.marks.english + s.marks.math + s.marks.science; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-6 rounded-2xl border-2 border-amber-700 max-w-xl mx-auto"><h2 class="text-xl font-bold text-center border-b pb-2 mb-3">${orgName} — Report Card</h2><p class="text-sm"><strong>Student:</strong> ${s.name} | <strong>Total:</strong> ${t} / 400</p><button onclick="window.print()" class="no-print mt-4 bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print</button></div>`; }
-function viewIDCard(idx) { const s = students[idx]; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-5 rounded-2xl border-2 border-indigo-600 max-w-xs mx-auto text-center"><h3 class="font-bold text-indigo-700">${orgName}</h3><div class="text-lg font-bold mt-2">${s.name}</div><div class="text-xs">${s.class} | Roll: ${s.roll}</div></div>`; }
 
-// All-Module Excel Exports
+function viewMarksheet(idx) {
+    const s = students[idx];
+    const t = s.marks.hindi + s.marks.english + s.marks.math + s.marks.science;
+    const html = `<div class="bg-white text-slate-900 p-6 rounded-2xl border-2 border-amber-700 max-w-xl mx-auto"><h2 class="text-xl font-bold text-center border-b pb-2 mb-3">${orgName} — Report Card</h2><p class="text-sm"><strong>Student:</strong> ${s.name} (${s.class}) | <strong>Total:</strong> ${t} / 400</p></div>`;
+    document.getElementById('print-only-container').innerHTML = html;
+    document.getElementById('modal-area').innerHTML = `${html}<div class="no-print text-center mt-3"><button onclick="window.print()" class="bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print Only Marksheet</button></div>`;
+}
+
+function viewIDCard(idx) {
+    const s = students[idx];
+    const html = `<div class="bg-white text-slate-900 p-5 rounded-2xl border-2 border-indigo-600 max-w-xs mx-auto text-center"><h3 class="font-bold text-indigo-700">${orgName}</h3><div class="text-lg font-bold mt-2">${s.name}</div><div class="text-xs">${s.class} | Roll: ${s.roll}</div></div>`;
+    document.getElementById('print-only-container').innerHTML = html;
+    document.getElementById('modal-area').innerHTML = `${html}<div class="no-print text-center mt-3"><button onclick="window.print()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print Only ID Card</button></div>`;
+}
+
 function exportCSV() {
     let csv = "Roll,Student Name,Father Name,Class,Mobile,Total Fee,Paid Fee,Due Fee\n";
     students.forEach(s => { csv += `"${s.roll}","${s.name}","${s.father}","${s.class}","${s.mobile}",${s.totalFee},${s.paidFee},${s.totalFee - s.paidFee}\n`; });
     downloadCSVFile(csv, `${orgName}_Students_Master_Report.csv`);
-}
-function exportFeesExcel() {
-    let csv = "Roll,Student Name,Class,Mobile,Total Fee,Paid Fee,Balance Due\n";
-    students.forEach(s => { csv += `"${s.roll}","${s.name}","${s.class}","${s.mobile}",${s.totalFee},${s.paidFee},${s.totalFee - s.paidFee}\n`; });
-    downloadCSVFile(csv, `${orgName}_Fees_Ledger.csv`);
 }
 function exportAttendanceExcel() {
     let csv = "Date,Roll,Student Name,Class,Attendance Status,Remark\n";
