@@ -527,3 +527,85 @@ function printReceipt(idx) { const s = students[idx]; document.getElementById('m
 function viewMarksheet(idx) { const s = students[idx]; const t = s.marks.hindi + s.marks.english + s.marks.math + s.marks.science; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-6 rounded-2xl border-2 border-amber-700 max-w-xl mx-auto"><h2 class="text-xl font-bold text-center border-b pb-2 mb-3">${orgName} — Report Card</h2><p class="text-sm"><strong>Student:</strong> ${s.name} | <strong>Total:</strong> ${t} / 400</p><button onclick="window.print()" class="no-print mt-4 bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print</button></div>`; }
 function viewIDCard(idx) { const s = students[idx]; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-5 rounded-2xl border-2 border-indigo-600 max-w-xs mx-auto text-center"><h3 class="font-bold text-indigo-700">${orgName}</h3><div class="text-lg font-bold mt-2">${s.name}</div><div class="text-xs">${s.class} | Roll: ${s.roll}</div></div>`; }
 function exportCSV() { let csv = "Roll,Name,Class,PaidFee\n"; students.forEach(s => { csv += `${s.roll},"${s.name}","${s.class}",${s.paidFee}\n`; }); const l = document.createElement("a"); l.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' })); l.download = `${orgName}_Report.csv`; l.click(); }
+if (activeTab === 'manage_users') {
+        const editObj = editingUserIndex !== null ? appUsers[editingUserIndex] : null;
+        const collegePosts = (currentCollege && currentCollege.customPosts) ? currentCollege.customPosts : ["Vice Principal", "Office Clerk", "Teacher", "Accountant", "Librarian"];
+
+        html = `
+            <div class="space-y-6">
+                <!-- ऊपर: इस संस्थान के Custom Posts (पद) जोड़ने का बॉक्स -->
+                <div class="glass-panel p-5 rounded-2xl border border-indigo-500/30 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h4 class="font-bold text-sm text-indigo-400">${isHi ? '🏷️ संस्थान के कस्टम पद (Custom Posts / Designations)' : '🏷️ Institute Custom Posts / Designations'}</h4>
+                        <div class="flex flex-wrap gap-1.5 mt-2">
+                            ${collegePosts.map((p, pIdx) => `
+                                <span class="inline-flex items-center gap-1.5 bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg text-xs font-semibold">
+                                    ${p}
+                                    <button onclick="deleteInstitutePost(${pIdx})" class="text-rose-400 hover:text-rose-300 text-[10px]">✖</button>
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <form onsubmit="addInstitutePost(event)" class="flex gap-2">
+                        <input type="text" id="inst-new-post" required placeholder="${isHi ? 'नया पद जोड़ें (जैसे: Clerk)' : 'Add new post...'}" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs">
+                        <button type="submit" class="bg-indigo-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold">+ Add Post</button>
+                    </form>
+                </div>
+
+                <!-- नीचे: स्टाफ यूज़र बनाने और पावर देने का फॉर्म -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="glass-panel p-6 rounded-2xl border ${editObj ? 'border-amber-500/50' : 'border-indigo-500/30'} h-fit">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-extrabold text-lg ${editObj ? 'text-amber-400' : 'text-indigo-400'}">${editObj ? (isHi ? '✏️ स्टाफ यूज़र एडिट करें' : '✏️ Edit Staff User') : (isHi ? '🔐 नया स्टाफ लॉगिन बनाएं' : '🔐 Create Staff Login')}</h3>
+                            ${editObj ? `<button onclick="editingUserIndex=null; renderApp()" class="text-xs text-rose-400 underline">Cancel</button>` : ''}
+                        </div>
+                        <form onsubmit="saveUserForm(event)" class="space-y-3 text-sm">
+                            <input type="text" id="new-u-fullname" required value="${editObj ? editObj.name : ''}" placeholder="${isHi ? 'कर्मचारी का पूरा नाम *' : 'Staff Full Name *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-400">${isHi ? 'पद चुनें (Select Custom Post) *' : 'Select Custom Post *'}</label>
+                                <select id="new-u-role" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 font-bold text-indigo-300">
+                                    ${collegePosts.map(p => `<option value="${p}" ${editObj && editObj.roleLabel === p ? 'selected' : ''}>${p}</option>`).join('')}
+                                </select>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="new-u-username" required value="${editObj ? editObj.username : ''}" placeholder="${isHi ? 'यूज़रनेम *' : 'Username *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                                <input type="text" id="new-u-password" required value="${editObj ? editObj.password : ''}" placeholder="${isHi ? 'पासवर्ड *' : 'Password *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            </div>
+
+                            <div class="text-[11px] font-bold text-slate-400 pt-1">${isHi ? 'इस पद के लिए पावर चुनें:' : 'Assign Powers for this Post:'}</div>
+                            <div class="grid grid-cols-2 gap-2 text-xs bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-dashboard" ${editObj ? (editObj.powers.dashboard ? 'checked' : '') : 'checked'}> Dashboard</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-students" ${editObj && editObj.powers.students ? 'checked' : ''}> Admission</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-fees" ${editObj && editObj.powers.fees ? 'checked' : ''}> Fees</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-payroll" ${editObj && editObj.powers.payroll ? 'checked' : ''}> Payroll</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-accounts" ${editObj && editObj.powers.accounts ? 'checked' : ''}> Accounts</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-library" ${editObj && editObj.powers.library ? 'checked' : ''}> Library</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-notices" ${editObj ? (editObj.powers.notices ? 'checked' : '') : 'checked'}> Notices</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-attendance" ${editObj && editObj.powers.attendance ? 'checked' : ''}> Attendance</label>
+                                <label class="flex items-center gap-2"><input type="checkbox" id="p-exams" ${editObj && editObj.powers.exams ? 'checked' : ''}> Exams</label>
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-xl">${editObj ? '💾 Update Staff' : '✅ Create Staff Login'}</button>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
+                        <h3 class="font-bold text-lg">${isHi ? 'सक्रिय स्टाफ यूज़र्स' : 'Active Staff Users'} (${appUsers.length})</h3>
+                        ${appUsers.map((u, idx) => `
+                            <div class="p-4 rounded-2xl border border-slate-800 bg-slate-900/50 flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold">${u.name} <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full ml-1">${u.roleLabel}</span></div>
+                                    <div class="text-xs text-slate-400 mt-1">User: <strong class="text-emerald-400">${u.username}</strong> | Pass: <strong class="text-amber-400">${u.password}</strong></div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="editingUserIndex=${idx}; renderApp()" class="bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold">✏️ Edit</button>
+                                    <button onclick="appUsers.splice(${idx},1); saveData(); renderApp()" class="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl text-xs font-bold">🗑️</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
