@@ -4,34 +4,34 @@
 
 const defaultStaff = [
     { id: "EMP01", name: "Dr. Rajesh Sharma", role: "Senior Maths Teacher", mobile: "9876543210", bank: "SBI •••• 4521", basicSalary: 28000, workingDays: 30, presentDays: 28, absentDays: 1, halfDays: 1, todayStatus: "P", paidStatus: "Paid" },
-    { id: "EMP02", name: "Sunita Verma", role: "Head Accountant / Clerk", mobile: "9876543211", bank: "PNB •••• 8890", basicSalary: 18000, workingDays: 30, presentDays: 29, absentDays: 0, halfDays: 1, todayStatus: "P", paidStatus: "Pending" },
-    { id: "EMP03", name: "Vikram Singh", role: "Science Teacher", mobile: "9876543212", bank: "BOB •••• 3312", basicSalary: 22000, workingDays: 30, presentDays: 26, absentDays: 3, halfDays: 1, todayStatus: "A", paidStatus: "Pending" },
-    { id: "EMP04", name: "Amit Kumar", role: "Library Incharge", mobile: "9876543213", bank: "HDFC •••• 1104", basicSalary: 15000, workingDays: 30, presentDays: 30, absentDays: 0, halfDays: 0, todayStatus: "P", paidStatus: "Paid" }
+    { id: "EMP02", name: "Sunita Verma", role: "Head Accountant", mobile: "9876543211", bank: "PNB •••• 8890", basicSalary: 18000, workingDays: 30, presentDays: 29, absentDays: 0, halfDays: 1, todayStatus: "P", paidStatus: "Pending" }
 ];
 
-let staffList = JSON.parse(localStorage.getItem('vs_staff')) || defaultStaff;
+let staffList = [];
 let payrollMonth = "November 2026";
 
-function saveStaffData() {
-    localStorage.setItem('vs_staff', JSON.stringify(staffList));
+function loadCurrentInstituteStaff() {
+    staffList = JSON.parse(localStorage.getItem(storagePrefix + 'staff')) || JSON.parse(JSON.stringify(defaultStaff));
 }
 
-// छुट्टी और हाफ-डे के हिसाब से शुद्ध सैलरी (Net Salary) निकालना
+function saveStaffData() {
+    localStorage.setItem(storagePrefix + 'staff', JSON.stringify(staffList));
+}
+
 function calculateNetSalary(st) {
     const perDay = st.basicSalary / (st.workingDays || 30);
     const deduction = (st.absentDays * perDay) + (st.halfDays * (perDay / 2));
     return Math.max(0, Math.round(st.basicSalary - deduction));
 }
 
-// स्टाफ एवं पेरोल की पूरी स्क्रीन रेंडर करना
 function renderStaffPayrollModule() {
+    loadCurrentInstituteStaff();
     const isHi = currentLang === 'hi';
     const totalPayroll = staffList.reduce((sum, st) => sum + calculateNetSalary(st), 0);
     const totalDeductions = staffList.reduce((sum, st) => sum + (st.basicSalary - calculateNetSalary(st)), 0);
     const presentStaff = staffList.filter(st => st.todayStatus === 'P').length;
 
     return `
-        <!-- टॉप समरी कार्ड्स -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div class="glass-panel p-5 rounded-2xl border border-indigo-500/30">
                 <div class="text-xs text-slate-400 font-bold">${isHi ? 'कुल शिक्षक व स्टाफ (आज उपस्थित)' : 'Active Staff (Present Today)'}</div>
@@ -42,13 +42,12 @@ function renderStaffPayrollModule() {
                 <div class="text-2xl font-extrabold text-emerald-400 mt-1">₹${totalPayroll.toLocaleString('en-IN')}</div>
             </div>
             <div class="glass-panel p-5 rounded-2xl border border-rose-500/30">
-                <div class="text-xs text-slate-400 font-bold">${isHi ? 'अनुपस्थिति कटौती (Deduction)' : 'Total Leave Deductions'}</div>
+                <div class="text-xs text-slate-400 font-bold">${isHi ? 'छुट्टी कटौती (Deduction)' : 'Total Leave Deductions'}</div>
                 <div class="text-2xl font-extrabold text-rose-400 mt-1">- ₹${totalDeductions.toLocaleString('en-IN')}</div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- नया शिक्षक/स्टाफ जोड़ने का फॉर्म -->
             <div class="glass-panel p-5 rounded-2xl border border-slate-800 h-fit">
                 <h3 class="font-bold text-lg mb-3 text-indigo-400">${isHi ? '➕ नया शिक्षक / स्टाफ जोड़ें' : '➕ Add Teacher / Staff'}</h3>
                 <form onsubmit="addNewStaff(event)" class="space-y-3 text-sm">
@@ -63,25 +62,29 @@ function renderStaffPayrollModule() {
                 </form>
             </div>
 
-            <!-- स्टाफ हाज़िरी और सैलरी कैलकुलेटर तालिका -->
             <div class="lg:col-span-2 glass-panel p-5 rounded-2xl border border-slate-800 overflow-x-auto">
                 <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
-                    <h3 class="font-bold text-lg">${isHi ? '💳 शिक्षक हाज़िरी व सैलरी स्लिप' : '💳 Staff Attendance & Salary Sheet'}</h3>
-                    <select onchange="payrollMonth=this.value; renderApp()" class="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold">
-                        <option value="November 2026" ${payrollMonth === 'November 2026' ? 'selected' : ''}>November 2026</option>
-                        <option value="December 2026" ${payrollMonth === 'December 2026' ? 'selected' : ''}>December 2026</option>
-                        <option value="January 2027" ${payrollMonth === 'January 2027' ? 'selected' : ''}>January 2027</option>
-                    </select>
+                    <h3 class="font-bold text-lg">${isHi ? '💳 मासिक हाज़िरी व सैलरी शीट' : '💳 Staff Attendance & Salary Sheet'}</h3>
+                    <div class="flex items-center gap-2">
+                        <select onchange="payrollMonth=this.value; renderApp()" class="px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold">
+                            <option value="November 2026" ${payrollMonth === 'November 2026' ? 'selected' : ''}>November 2026</option>
+                            <option value="December 2026" ${payrollMonth === 'December 2026' ? 'selected' : ''}>December 2026</option>
+                            <option value="January 2027" ${payrollMonth === 'January 2027' ? 'selected' : ''}>January 2027</option>
+                        </select>
+                        <button onclick="exportStaffPayrollExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-extrabold shadow">
+                            📥 ${isHi ? 'Excel' : 'Export Excel'}
+                        </button>
+                    </div>
                 </div>
 
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="border-b border-slate-800 text-slate-400 text-xs">
-                            <th class="py-2">${isHi ? 'शिक्षक व आज की हाज़िरी' : 'Staff & Today Status'}</th>
+                            <th class="py-2">${isHi ? 'शिक्षक व आज की हाज़िरी' : 'Staff & Today'}</th>
                             <th class="py-2">${isHi ? 'मूल वेतन' : 'Basic'}</th>
                             <th class="py-2">${isHi ? 'मासिक A / H' : 'Monthly A / H'}</th>
                             <th class="py-2">${isHi ? 'शुद्ध वेतन' : 'Net Pay'}</th>
-                            <th class="py-2">${isHi ? 'सैलरी स्लिप' : 'Salary Slip'}</th>
+                            <th class="py-2">${isHi ? 'सैलरी स्लिप' : 'Slip & Status'}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -92,7 +95,7 @@ function renderStaffPayrollModule() {
                                     <td class="py-3.5">
                                         <div class="font-bold flex items-center gap-2">
                                             <span>${st.name}</span>
-                                            <button onclick="toggleStaffToday(${idx})" title="Change Today Attendance" class="px-2 py-0.5 rounded text-[10px] font-extrabold ${st.todayStatus === 'P' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}">
+                                            <button onclick="toggleStaffToday(${idx})" title="Toggle Today Attendance" class="px-2 py-0.5 rounded text-[10px] font-extrabold ${st.todayStatus === 'P' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}">
                                                 ${st.todayStatus === 'P' ? 'P' : 'A'}
                                             </button>
                                         </div>
@@ -109,11 +112,9 @@ function renderStaffPayrollModule() {
                                     </td>
                                     <td class="py-3.5 font-extrabold text-emerald-400">₹${netSal.toLocaleString('en-IN')}</td>
                                     <td class="py-3.5 flex flex-wrap gap-1.5">
-                                        <button onclick="viewSalarySlip(${idx})" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow">
-                                            🧾 ${isHi ? 'स्लिप' : 'Slip'}
-                                        </button>
+                                        <button onclick="viewSalarySlip(${idx})" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow">🧾 Slip</button>
                                         <button onclick="toggleSalaryStatus(${idx})" class="px-2.5 py-1.5 rounded-lg text-xs font-bold ${st.paidStatus === 'Paid' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}">
-                                            ${st.paidStatus === 'Paid' ? (isHi ? '✔ Paid' : '✔ Paid') : (isHi ? '⏳ Due' : '⏳ Due')}
+                                            ${st.paidStatus === 'Paid' ? '✔ Paid' : '⏳ Due'}
                                         </button>
                                         <button onclick="deleteStaff(${idx})" class="text-xs text-rose-400 px-1">🗑️</button>
                                     </td>
@@ -128,7 +129,6 @@ function renderStaffPayrollModule() {
     `;
 }
 
-// स्टाफ जोड़ना, अपडेट करना और हटाना
 function addNewStaff(e) {
     e.preventDefault();
     staffList.unshift({
@@ -138,46 +138,31 @@ function addNewStaff(e) {
         basicSalary: Number(document.getElementById('stf-salary').value),
         bank: document.getElementById('stf-bank').value.trim() || "Bank Transfer",
         mobile: document.getElementById('stf-mobile').value.trim() || "9800000000",
-        workingDays: 30,
-        presentDays: 30,
-        absentDays: 0,
-        halfDays: 0,
-        todayStatus: "P",
-        paidStatus: "Pending"
+        workingDays: 30, presentDays: 30, absentDays: 0, halfDays: 0, todayStatus: "P", paidStatus: "Pending"
     });
-    saveStaffData();
-    renderApp();
+    saveStaffData(); renderApp();
 }
 
 function toggleStaffToday(idx) {
     staffList[idx].todayStatus = staffList[idx].todayStatus === 'P' ? 'A' : 'P';
     if (staffList[idx].todayStatus === 'A') staffList[idx].absentDays += 1;
     else if (staffList[idx].absentDays > 0) staffList[idx].absentDays -= 1;
-    saveStaffData();
-    renderApp();
+    saveStaffData(); renderApp();
 }
 
-function updateStaffDays(idx, field, val) {
-    staffList[idx][field] = Math.max(0, Number(val));
-    saveStaffData();
-    renderApp();
+function updateStaffDays(idx, field, val) { staffList[idx][field] = Math.max(0, Number(val)); saveStaffData(); renderApp(); }
+function toggleSalaryStatus(idx) { staffList[idx].paidStatus = staffList[idx].paidStatus === 'Paid' ? 'Pending' : 'Paid'; saveStaffData(); renderApp(); }
+function deleteStaff(idx) { if (confirm("Remove this staff record?")) { staffList.splice(idx, 1); saveStaffData(); renderApp(); } }
+
+function exportStaffPayrollExcel() {
+    loadCurrentInstituteStaff();
+    let csv = "EmpID,Name,Designation,Mobile,BasicSalary,AbsentDays,HalfDays,NetPayableSalary,TodayAttendance,PaymentStatus\n";
+    staffList.forEach(st => {
+        csv += `"${st.id}","${st.name}","${st.role}","${st.mobile}",${st.basicSalary},${st.absentDays},${st.halfDays},${calculateNetSalary(st)},"${st.todayStatus}","${st.paidStatus}"\n`;
+    });
+    downloadCSVFile(csv, `${orgName}_Staff_Payroll_${payrollMonth}.csv`);
 }
 
-function toggleSalaryStatus(idx) {
-    staffList[idx].paidStatus = staffList[idx].paidStatus === 'Paid' ? 'Pending' : 'Paid';
-    saveStaffData();
-    renderApp();
-}
-
-function deleteStaff(idx) {
-    if (confirm(currentLang === 'hi' ? "क्या आप इस शिक्षक का रिकॉर्ड हटाना चाहते हैं?" : "Remove this staff record?")) {
-        staffList.splice(idx, 1);
-        saveStaffData();
-        renderApp();
-    }
-}
-
-// प्रिंटेबल सैलरी स्लिप (Printable Salary Slip)
 function viewSalarySlip(idx) {
     const st = staffList[idx];
     const isHi = currentLang === 'hi';
@@ -193,42 +178,24 @@ function viewSalarySlip(idx) {
                 <h2 class="text-xl font-bold uppercase">${orgName}</h2>
                 <p class="text-xs text-slate-600">${isHi ? 'मासिक वेतन पर्ची (Salary Slip)' : 'Monthly Salary Statement'} — <strong>${payrollMonth}</strong></p>
             </div>
-
             <div class="grid grid-cols-2 text-xs gap-2 mb-4 bg-slate-50 p-3 rounded-lg border">
                 <div><strong>${isHi ? 'कर्मचारी का नाम:' : 'Employee Name:'}</strong> ${st.name}</div>
                 <div><strong>${isHi ? 'कर्मचारी ID:' : 'Employee ID:'}</strong> ${st.id}</div>
-                <div><strong>${isHi ? 'पद (Designation):' : 'Designation:'}</strong> ${st.role}</div>
-                <div><strong>${isHi ? 'बैंक / भुगतान माध्यम:' : 'Payment Mode:'}</strong> ${st.bank}</div>
+                <div><strong>${isHi ? 'पद:' : 'Designation:'}</strong> ${st.role}</div>
+                <div><strong>${isHi ? 'बैंक / भुगतान:' : 'Payment Mode:'}</strong> ${st.bank}</div>
             </div>
-
             <table class="w-full border border-slate-800 text-sm mb-4">
-                <tr class="bg-slate-100 border-b border-slate-800">
-                    <th class="p-2 text-left">${isHi ? 'वेतन विवरण' : 'Earnings & Deductions'}</th>
-                    <th class="p-2 text-right">${isHi ? 'राशि (₹)' : 'Amount (₹)'}</th>
-                </tr>
-                <tr class="border-b">
-                    <td class="p-2">${isHi ? 'मूल मासिक वेतन (Basic Salary)' : 'Basic Monthly Salary'}</td>
-                    <td class="p-2 text-right font-semibold">₹${st.basicSalary.toLocaleString('en-IN')}</td>
-                </tr>
-                <tr class="border-b text-rose-700">
-                    <td class="p-2">${isHi ? `छुट्टी कटौती (${st.absentDays} अनुपस्थित, ${st.halfDays} हाफ-डे)` : `Leave Deduction (${st.absentDays} Absent, ${st.halfDays} Half-Day)`}</td>
-                    <td class="p-2 text-right font-semibold">- ₹${deduction.toLocaleString('en-IN')}</td>
-                </tr>
-                <tr class="bg-emerald-50 font-extrabold text-emerald-800 text-base">
-                    <td class="p-2">${isHi ? 'शुद्ध देय वेतन (Net Payable Salary)' : 'Net Payable Salary'}</td>
-                    <td class="p-2 text-right">₹${netSal.toLocaleString('en-IN')}</td>
-                </tr>
+                <tr class="bg-slate-100 border-b border-slate-800"><th class="p-2 text-left">${isHi ? 'वेतन विवरण' : 'Description'}</th><th class="p-2 text-right">${isHi ? 'राशि (₹)' : 'Amount (₹)'}</th></tr>
+                <tr class="border-b"><td class="p-2">${isHi ? 'मूल मासिक वेतन' : 'Basic Monthly Salary'}</td><td class="p-2 text-right font-semibold">₹${st.basicSalary.toLocaleString('en-IN')}</td></tr>
+                <tr class="border-b text-rose-700"><td class="p-2">${isHi ? `छुट्टी कटौती (${st.absentDays} A,${st.halfDays} H)` : `Leave Deduction (${st.absentDays} Absent,${st.halfDays} Half-Day)`}</td><td class="p-2 text-right font-semibold">- ₹${deduction.toLocaleString('en-IN')}</td></tr>
+                <tr class="bg-emerald-50 font-extrabold text-emerald-800 text-base"><td class="p-2">${isHi ? 'शुद्ध देय वेतन' : 'Net Payable Salary'}</td><td class="p-2 text-right">₹${netSal.toLocaleString('en-IN')}</td></tr>
             </table>
-
             <div class="flex justify-between items-center mt-6 pt-4 border-t border-dashed border-slate-400 text-xs">
                 <span>${isHi ? 'कर्मचारी के हस्ताक्षर' : 'Employee Signature'}</span>
                 <span class="font-bold">${isHi ? 'प्रधानाचार्य / अधिकृत मुहर' : 'Principal / Authorized Sign'}</span>
             </div>
-
             <div class="no-print mt-4 text-center">
-                <button onclick="window.print()" class="bg-indigo-600 text-white px-5 py-2 rounded-xl text-xs font-bold shadow">
-                    🖨️ ${isHi ? 'सैलरी स्लिप प्रिंट / PDF सेव करें' : 'Print / Save Salary Slip PDF'}
-                </button>
+                <button onclick="window.print()" class="bg-indigo-600 text-white px-5 py-2 rounded-xl text-xs font-bold shadow">🖨️ ${isHi ? 'प्रिंट / PDF सेव करें' : 'Print / Save PDF'}</button>
             </div>
         </div>
     `;

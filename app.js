@@ -8,16 +8,11 @@ let selectedAttClass = "ALL";
 let selectedAttDate = new Date().toISOString().split('T')[0];
 
 let currentCollege = null;
-if (collegeSlug) {
-    const allCols = JSON.parse(localStorage.getItem('vs_colleges_db')) || defaultColleges;
-    currentCollege = allCols.find(c => c.slug === collegeSlug.toLowerCase());
-}
-
-const storagePrefix = currentCollege ? `vs_data_${currentCollege.slug}_` : `vs_data_default_`;
+let storagePrefix = `vs_data_default_`;
 
 const defaultUsers = [
-    { id: "USR01", name: "Rajesh Sharma", username: "teacher1", password: "123", roleLabel: "Senior Teacher", powers: { dashboard: false, students: false, fees: false, payroll: false, accounts: false, library: false, notices: true, attendance: true, exams: true } },
-    { id: "USR02", name: "Sunita Verma", username: "clerk1", password: "123", roleLabel: "Office Clerk", powers: { dashboard: true, students: true, fees: true, payroll: true, accounts: true, library: false, notices: true, attendance: false, exams: false } }
+    { id: "USR01", name: "Rajesh Sharma", username: "teacher1", password: "123", roleLabel: "Class Teacher", powers: { dashboard: false, students: false, fees: false, payroll: false, accounts: false, library: false, notices: true, attendance: true, exams: true } },
+    { id: "USR02", name: "Sunita Verma", username: "clerk1", password: "123", roleLabel: "Account Clerk", powers: { dashboard: true, students: true, fees: true, payroll: true, accounts: true, library: false, notices: true, attendance: false, exams: false } }
 ];
 
 const superAdminCredentials = { username: "superadmin", password: "123", name: "Aman Kumar (Master Admin)" };
@@ -31,16 +26,37 @@ const defaultExpenses = [{ id: 1, title: "Electricity & Internet Bill", amount: 
 const defaultNotices = [{ id: 1, title: "Welcome to Digital Campus", body: "All academic and fee records are now live on VidyaSetu.", date: "24/11/2026" }];
 const defaultSeats = Array.from({ length: 20 }, (_, i) => ({ seatNo: i + 1, status: i === 0 ? "booked" : "available", studentName: i === 0 ? "Aarav Sharma" : "" }));
 
-let appUsers = JSON.parse(localStorage.getItem(storagePrefix + 'users')) || defaultUsers;
-let students = JSON.parse(localStorage.getItem(storagePrefix + 'students')) || defaultStudents;
-let expenses = JSON.parse(localStorage.getItem(storagePrefix + 'expenses')) || defaultExpenses;
-let notices = JSON.parse(localStorage.getItem(storagePrefix + 'notices')) || defaultNotices;
-let librarySeats = JSON.parse(localStorage.getItem(storagePrefix + 'seats')) || defaultSeats;
-let orgName = currentCollege ? currentCollege.name : "VidyaSetu Institute";
-let orgLogo = currentCollege ? currentCollege.logo : "";
+let appUsers = [];
+let students = [];
+let expenses = [];
+let notices = [];
+let librarySeats = [];
+let orgName = "VidyaSetu Institute";
+let orgLogo = "";
 
 let loggedUser = null;
 let activeTab = "";
+let superAdminViewingSlug = null; // जब Super Admin किसी संस्थान के अंदर पूरा पैनल खोलता है
+
+function loadCollegeWorkspaceData(colObj) {
+    currentCollege = colObj;
+    storagePrefix = `vs_data_${colObj.slug}_`;
+    orgName = colObj.name;
+    orgLogo = colObj.logo || "";
+
+    appUsers = JSON.parse(localStorage.getItem(storagePrefix + 'users')) || JSON.parse(JSON.stringify(defaultUsers));
+    students = JSON.parse(localStorage.getItem(storagePrefix + 'students')) || JSON.parse(JSON.stringify(defaultStudents));
+    expenses = JSON.parse(localStorage.getItem(storagePrefix + 'expenses')) || JSON.parse(JSON.stringify(defaultExpenses));
+    notices = JSON.parse(localStorage.getItem(storagePrefix + 'notices')) || JSON.parse(JSON.stringify(defaultNotices));
+    librarySeats = JSON.parse(localStorage.getItem(storagePrefix + 'seats')) || JSON.parse(JSON.stringify(defaultSeats));
+    if (typeof loadCurrentInstituteStaff === 'function') loadCurrentInstituteStaff();
+}
+
+if (collegeSlug) {
+    const allCols = JSON.parse(localStorage.getItem('vs_colleges_db')) || defaultColleges;
+    const foundCol = allCols.find(c => c.slug === collegeSlug.toLowerCase());
+    if (foundCol) loadCollegeWorkspaceData(foundCol);
+}
 
 function saveData() {
     localStorage.setItem(storagePrefix + 'users', JSON.stringify(appUsers));
@@ -48,6 +64,46 @@ function saveData() {
     localStorage.setItem(storagePrefix + 'expenses', JSON.stringify(expenses));
     localStorage.setItem(storagePrefix + 'notices', JSON.stringify(notices));
     localStorage.setItem(storagePrefix + 'seats', JSON.stringify(librarySeats));
+}
+
+// =========================================================================
+// Super Admin द्वारा किसी भी संस्थान का पूरा पैनल खोलना व वापस लौटना
+// =========================================================================
+function enterSuperAdminInstituteView(slug) {
+    const allCols = JSON.parse(localStorage.getItem('vs_colleges_db')) || defaultColleges;
+    const targetCol = allCols.find(c => c.slug === slug);
+    if (!targetCol) return;
+
+    superAdminViewingSlug = slug;
+    loadCollegeWorkspaceData(targetCol);
+
+    document.getElementById('topbar-org-title').innerText = `${targetCol.name} (Super Admin Live Control)`;
+    document.getElementById('topbar-city-tag').innerText = `• ${targetCol.city} • Managing as Master Admin`;
+    document.getElementById('topbar-logo-box').innerHTML = targetCol.logo ? `<img src="${targetCol.logo}" class="w-full h-full object-cover">` : "🏫";
+    document.getElementById('sidebar-user-badge').innerText = "👑 Master Control Mode";
+
+    activeTab = 'dashboard';
+    switchTab('dashboard');
+}
+
+function exitSuperAdminInstituteView() {
+    superAdminViewingSlug = null;
+    currentCollege = null;
+    document.getElementById('topbar-org-title').innerText = "VidyaSetu Central Master Control";
+    document.getElementById('topbar-city-tag').innerText = "• Global Admin Console";
+    document.getElementById('topbar-logo-box').innerHTML = "👑";
+    document.getElementById('sidebar-user-badge').innerText = "● Master Owner";
+
+    activeTab = 'super_colleges';
+    switchTab('super_colleges');
+}
+
+// Universal Excel (CSV) Downloader
+function downloadCSVFile(csvContent, fileName) {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' }));
+    link.download = fileName.replace(/\s+/g, '_');
+    link.click();
 }
 
 function syncAnimatedSwitches() {
@@ -95,7 +151,7 @@ window.onload = function() {
         updateLoginScreenLanguage();
     } else if (collegeSlug) {
         if (!currentCollege) {
-            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-rose-500">404 • Invalid College URL</h1><p class="text-sm text-slate-400 mt-2">This institute link does not exist on VidyaSetu.</p><a href="?" class="mt-4 bg-indigo-600 text-white px-5 py-2 rounded-xl text-xs font-bold">Go to VidyaSetu Home</a></div>`;
+            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-rose-500">404 • Invalid Institute URL</h1><p class="text-sm text-slate-400 mt-2">This institute link does not exist on VidyaSetu.</p><a href="?" class="mt-4 bg-indigo-600 text-white px-5 py-2 rounded-xl text-xs font-bold">Go to VidyaSetu Home</a></div>`;
             return;
         }
         if (!currentCollege.active) {
@@ -132,7 +188,7 @@ function updateLoginScreenLanguage() {
         titleEl.innerText = currentCollege.name;
         subEl.innerText = isHi ? "संस्थान एडमिन एवं स्टाफ लॉगिन पोर्टल" : "Institute Admin & Staff Login Portal";
         logoEl.innerHTML = currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏫";
-        hintEl.innerHTML = isHi ? `प्रिंसिपल लॉगिन: <strong>${currentCollege.adminUser}</strong> (पासवर्ड: ${currentCollege.adminPass}) | स्टाफ: <strong>clerk1</strong>` : `Principal Login: <strong>${currentCollege.adminUser}</strong> (Pass: ${currentCollege.adminPass}) | Staff: <strong>clerk1</strong>`;
+        hintEl.innerHTML = isHi ? `एडमिन लॉगिन: <strong>${currentCollege.adminUser}</strong> (पासवर्ड: ${currentCollege.adminPass}) | स्टाफ: <strong>clerk1</strong>` : `Admin Login: <strong>${currentCollege.adminUser}</strong> (Pass: ${currentCollege.adminPass}) | Staff: <strong>clerk1</strong>`;
     }
 }
 
@@ -154,7 +210,7 @@ function handleLogin(e) {
         errBox.classList.add('hidden'); openDashboard(); return;
     } else if (currentCollege) {
         if (u === currentCollege.adminUser && p === currentCollege.adminPass) {
-            loggedUser = { type: 'admin', name: "Principal / Admin", roleLabel: "College Admin", powers: currentCollege.powers };
+            loggedUser = { type: 'admin', name: "Institute Admin", roleLabel: "Master Admin", powers: currentCollege.powers };
             errBox.classList.add('hidden'); openDashboard(); return;
         }
         const foundUser = appUsers.find(user => user.username === u && user.password === p);
@@ -186,7 +242,7 @@ function openDashboard() {
 }
 
 function logoutUser() {
-    loggedUser = null; editingUserIndex = null;
+    loggedUser = null; editingUserIndex = null; superAdminViewingSlug = null;
     document.getElementById('login-username').value = "";
     document.getElementById('login-password').value = "";
     document.getElementById('dashboard-screen').classList.add('hidden');
@@ -198,29 +254,36 @@ function getDynamicMenuItems() {
     if (!loggedUser) return [];
     const isHi = currentLang === 'hi';
 
-    if (loggedUser.type === 'superadmin') {
+    // यदि Super Admin सामान्य मोड में है
+    if (loggedUser.type === 'superadmin' && !superAdminViewingSlug) {
         return [
             { id: 'super_analytics', icon: '📊', label: isHi ? 'सुपर एनालिटिक्स' : 'Super Analytics' },
-            { id: 'super_colleges', icon: '🏫', label: isHi ? 'कॉलेज व कस्टम URL' : 'Colleges & Custom URLs' },
+            { id: 'super_colleges', icon: '🏫', label: isHi ? 'संस्थान व कस्टम URL' : 'Institutes & URLs' },
             { id: 'super_leads', icon: '📩', label: isHi ? 'सब्स्क्रिप्शन फॉर्म डेटा' : 'Subscription Leads' }
         ];
     }
 
+    // यदि Institute Admin है OR Super Admin किसी संस्थान का Full View देख रहा है
     const cp = currentCollege.powers;
-    if (loggedUser.type === 'admin') {
-        const items = [{ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' }];
-        if (cp.allowAdmission) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
-        if (cp.allowFees) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व WhatsApp' : 'Fees & WhatsApp' });
-        if (cp.allowPayroll) items.push({ id: 'payroll', icon: '💳', label: isHi ? 'शिक्षक व सैलरी स्लिप' : 'Staff & Payroll' });
-        if (cp.allowAccounts) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
-        if (cp.allowLibrary) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
-        if (cp.allowNotices) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
-        if (cp.allowAttendance) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
-        if (cp.allowExams) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
-        items.push({ id: 'manage_users', icon: '🔐', label: isHi ? 'कस्टम पद व स्टाफ लॉगिन' : 'Custom Posts & Logins' });
+    if (loggedUser.type === 'admin' || (loggedUser.type === 'superadmin' && superAdminViewingSlug)) {
+        const items = [];
+        if (superAdminViewingSlug) {
+            items.push({ id: 'exit_inst_view', icon: '🔙', label: isHi ? 'सुपर एडमिन पर लौटें' : 'Back to Super Admin' });
+        }
+        items.push({ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' });
+        if (cp.allowAdmission || superAdminViewingSlug) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
+        if (cp.allowFees || superAdminViewingSlug) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व WhatsApp' : 'Fees & WhatsApp' });
+        if (cp.allowPayroll || superAdminViewingSlug) items.push({ id: 'payroll', icon: '💳', label: isHi ? 'शिक्षक व सैलरी स्लिप' : 'Staff & Payroll' });
+        if (cp.allowAccounts || superAdminViewingSlug) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
+        if (cp.allowLibrary || superAdminViewingSlug) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
+        if (cp.allowNotices || superAdminViewingSlug) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
+        if (cp.allowAttendance || superAdminViewingSlug) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
+        if (cp.allowExams || superAdminViewingSlug) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
+        items.push({ id: 'manage_users', icon: '🔐', label: isHi ? 'स्टाफ लॉगिन व पावर' : 'Staff Logins & Powers' });
         return items;
     }
 
+    // सामान्य स्टाफ यूज़र
     const p = loggedUser.powers;
     const items = [];
     if (p.dashboard) items.push({ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' });
@@ -236,6 +299,7 @@ function getDynamicMenuItems() {
 }
 
 function switchTab(tabId) {
+    if (tabId === 'exit_inst_view') { exitSuperAdminInstituteView(); return; }
     activeTab = tabId;
     editingUserIndex = null;
     const main = document.getElementById('main-content');
@@ -252,7 +316,7 @@ function renderApp() {
     const menuItems = getDynamicMenuItems();
 
     navEl.innerHTML = menuItems.map(item => `
-        <button onclick="switchTab('${item.id}')" class="nav-btn flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${activeTab === item.id ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800/80'}">
+        <button onclick="switchTab('${item.id}')" class="nav-btn flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${item.id === 'exit_inst_view' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-2' : (activeTab === item.id ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800/80')}">
             <span class="text-base">${item.icon}</span>
             <span>${item.label}</span>
         </button>
@@ -265,86 +329,63 @@ function renderApp() {
     if (activeTab === 'payroll') { mainEl.innerHTML = renderStaffPayrollModule(); return; }
 
     let html = "";
+
+    // 1. असीमित स्टाफ लॉगिन व कस्टम रोल/पावर (बिना किसी Forced Default Post के)
     if (activeTab === 'manage_users') {
         const editObj = editingUserIndex !== null ? appUsers[editingUserIndex] : null;
-        const collegePosts = (currentCollege && currentCollege.customPosts) ? currentCollege.customPosts : ["Vice Principal", "Office Clerk", "Teacher", "Accountant", "Librarian"];
-
         html = `
-            <div class="space-y-6">
-                <div class="glass-panel p-5 rounded-2xl border border-indigo-500/30 flex flex-wrap justify-between items-center gap-4">
-                    <div>
-                        <h4 class="font-bold text-sm text-indigo-400">${isHi ? '🏷️ संस्थान के कस्टम पद (Custom Posts / Designations)' : '🏷️ Institute Custom Posts / Designations'}</h4>
-                        <div class="flex flex-wrap gap-1.5 mt-2">
-                            ${collegePosts.map((p, pIdx) => `
-                                <span class="inline-flex items-center gap-1.5 bg-slate-800 text-slate-200 px-2.5 py-1 rounded-lg text-xs font-semibold">
-                                    ${p}
-                                    <button onclick="deleteInstitutePost(${pIdx})" class="text-rose-400 hover:text-rose-300 text-[10px]">✖</button>
-                                </span>
-                            `).join('')}
-                        </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="glass-panel p-6 rounded-2xl border ${editObj ? 'border-amber-500/50' : 'border-indigo-500/30'} h-fit">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-extrabold text-lg ${editObj ? 'text-amber-400' : 'text-indigo-400'}">${editObj ? (isHi ? '✏️ स्टाफ लॉगिन एडिट करें' : '✏️ Edit Staff Login') : (isHi ? '🔐 नया स्टाफ यूज़र व पावर बनाएं' : '🔐 Create Unlimited Staff Login')}</h3>
+                        ${editObj ? `<button onclick="editingUserIndex=null; renderApp()" class="text-xs text-rose-400 underline">Cancel</button>` : ''}
                     </div>
-                    <form onsubmit="addInstitutePost(event)" class="flex gap-2">
-                        <input type="text" id="inst-new-post" required placeholder="${isHi ? 'नया पद जोड़ें (जैसे: Clerk)' : 'Add new post...'}" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs">
-                        <button type="submit" class="bg-indigo-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold">+ Add Post</button>
+                    <p class="text-[11px] text-slate-400 mb-3">${isHi ? 'हर कर्मचारी का नाम, उसका कस्टम पद, अलग यूज़रनेम-पासवर्ड और उसकी पावर खुद तय करें' : 'Assign custom post title, individual username/password & specific module powers'}</p>
+                    <form onsubmit="saveUserForm(event)" class="space-y-3 text-sm">
+                        <input type="text" id="new-u-fullname" required value="${editObj ? editObj.name : ''}" placeholder="${isHi ? 'कर्मचारी का नाम *' : 'Staff Full Name *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                        <input type="text" id="new-u-role" required value="${editObj ? editObj.roleLabel : ''}" placeholder="${isHi ? 'कस्टम पद लिखें (जैसे: Fees Clerk / Bus Incharge) *' : 'Custom Role / Post Title *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-indigo-300 font-semibold">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="new-u-username" required value="${editObj ? editObj.username : ''}" placeholder="${isHi ? 'यूज़रनेम *' : 'Username *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            <input type="text" id="new-u-password" required value="${editObj ? editObj.password : ''}" placeholder="${isHi ? 'पासवर्ड *' : 'Password *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                        </div>
+                        <div class="text-[11px] font-bold text-slate-400 pt-1">${isHi ? 'इस व्यक्ति को मिलने वाली शक्तियाँ (Powers):' : 'Select Powers for this Staff:'}</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-dashboard" ${editObj ? (editObj.powers.dashboard ? 'checked' : '') : 'checked'}> Dashboard</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-students" ${editObj && editObj.powers.students ? 'checked' : ''}> Admission</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-fees" ${editObj && editObj.powers.fees ? 'checked' : ''}> Fees</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-payroll" ${editObj && editObj.powers.payroll ? 'checked' : ''}> Payroll</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-accounts" ${editObj && editObj.powers.accounts ? 'checked' : ''}> Accounts</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-library" ${editObj && editObj.powers.library ? 'checked' : ''}> Library</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-notices" ${editObj ? (editObj.powers.notices ? 'checked' : '') : 'checked'}> Notices</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-attendance" ${editObj && editObj.powers.attendance ? 'checked' : ''}> Attendance</label>
+                            <label class="flex items-center gap-2"><input type="checkbox" id="p-exams" ${editObj && editObj.powers.exams ? 'checked' : ''}> Exams</label>
+                        </div>
+                        <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-xl">${editObj ? '💾 Update Staff' : '✅ Create Staff Login'}</button>
                     </form>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="glass-panel p-6 rounded-2xl border ${editObj ? 'border-amber-500/50' : 'border-indigo-500/30'} h-fit">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-extrabold text-lg ${editObj ? 'text-amber-400' : 'text-indigo-400'}">${editObj ? (isHi ? '✏️ स्टाफ यूज़र एडिट करें' : '✏️ Edit Staff User') : (isHi ? '🔐 नया स्टाफ लॉगिन बनाएं' : '🔐 Create Staff Login')}</h3>
-                            ${editObj ? `<button onclick="editingUserIndex=null; renderApp()" class="text-xs text-rose-400 underline">Cancel</button>` : ''}
-                        </div>
-                        <form onsubmit="saveUserForm(event)" class="space-y-3 text-sm">
-                            <input type="text" id="new-u-fullname" required value="${editObj ? editObj.name : ''}" placeholder="${isHi ? 'कर्मचारी का पूरा नाम *' : 'Staff Full Name *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                            
+                <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="font-bold text-lg">${isHi ? 'सक्रिय स्टाफ यूज़र अकाउंट्स' : 'Active Staff Logins'} (${appUsers.length})</h3>
+                        <button onclick="exportStaffLoginsExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
+                    </div>
+                    ${appUsers.map((u, idx) => `
+                        <div class="p-4 rounded-2xl border border-slate-800 bg-slate-900/50 flex flex-wrap justify-between items-center gap-2">
                             <div>
-                                <label class="text-[11px] font-bold text-slate-400">${isHi ? 'पद चुनें (Select Custom Post) *' : 'Select Custom Post *'}</label>
-                                <select id="new-u-role" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 font-bold text-indigo-300">
-                                    ${collegePosts.map(p => `<option value="${p}" ${editObj && editObj.roleLabel === p ? 'selected' : ''}>${p}</option>`).join('')}
-                                </select>
+                                <div class="font-bold">${u.name} <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full ml-1">${u.roleLabel}</span></div>
+                                <div class="text-xs text-slate-400 mt-1">Login ID: <strong class="text-emerald-400">${u.username}</strong> | Password: <strong class="text-amber-400">${u.password}</strong></div>
                             </div>
-
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="new-u-username" required value="${editObj ? editObj.username : ''}" placeholder="${isHi ? 'यूज़रनेम *' : 'Username *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                                <input type="text" id="new-u-password" required value="${editObj ? editObj.password : ''}" placeholder="${isHi ? 'पासवर्ड *' : 'Password *'}" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            <div class="flex gap-2">
+                                <button onclick="editingUserIndex=${idx}; renderApp()" class="bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold">✏️ Edit</button>
+                                <button onclick="appUsers.splice(${idx},1); saveData(); renderApp()" class="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl text-xs font-bold">🗑️</button>
                             </div>
-
-                            <div class="text-[11px] font-bold text-slate-400 pt-1">${isHi ? 'इस पद के लिए पावर चुनें:' : 'Assign Powers for this Post:'}</div>
-                            <div class="grid grid-cols-2 gap-2 text-xs bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-dashboard" ${editObj ? (editObj.powers.dashboard ? 'checked' : '') : 'checked'}> Dashboard</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-students" ${editObj && editObj.powers.students ? 'checked' : ''}> Admission</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-fees" ${editObj && editObj.powers.fees ? 'checked' : ''}> Fees</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-payroll" ${editObj && editObj.powers.payroll ? 'checked' : ''}> Payroll</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-accounts" ${editObj && editObj.powers.accounts ? 'checked' : ''}> Accounts</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-library" ${editObj && editObj.powers.library ? 'checked' : ''}> Library</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-notices" ${editObj ? (editObj.powers.notices ? 'checked' : '') : 'checked'}> Notices</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-attendance" ${editObj && editObj.powers.attendance ? 'checked' : ''}> Attendance</label>
-                                <label class="flex items-center gap-2"><input type="checkbox" id="p-exams" ${editObj && editObj.powers.exams ? 'checked' : ''}> Exams</label>
-                            </div>
-                            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 rounded-xl">${editObj ? '💾 Update Staff' : '✅ Create Staff Login'}</button>
-                        </form>
-                    </div>
-
-                    <div class="lg:col-span-2 glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
-                        <h3 class="font-bold text-lg">${isHi ? 'सक्रिय स्टाफ यूज़र्स' : 'Active Staff Users'} (${appUsers.length})</h3>
-                        ${appUsers.map((u, idx) => `
-                            <div class="p-4 rounded-2xl border border-slate-800 bg-slate-900/50 flex justify-between items-center">
-                                <div>
-                                    <div class="font-bold">${u.name} <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full ml-1">${u.roleLabel}</span></div>
-                                    <div class="text-xs text-slate-400 mt-1">User: <strong class="text-emerald-400">${u.username}</strong> | Pass: <strong class="text-amber-400">${u.password}</strong></div>
-                                </div>
-                                <div class="flex gap-2">
-                                    <button onclick="editingUserIndex=${idx}; renderApp()" class="bg-amber-500/20 text-amber-300 px-3 py-1.5 rounded-xl text-xs font-bold">✏️ Edit</button>
-                                    <button onclick="appUsers.splice(${idx},1); saveData(); renderApp()" class="bg-rose-500/20 text-rose-400 px-3 py-1.5 rounded-xl text-xs font-bold">🗑️</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
+                        </div>
+                    `).join('')}
                 </div>
             </div>
         `;
     }
+    // 2. Smart Attendance + Excel Export
     else if (activeTab === 'attendance') {
         const classes = ["ALL", ...new Set(students.map(s => s.class))];
         const filtered = selectedAttClass === "ALL" ? students : students.filter(s => s.class === selectedAttClass);
@@ -352,11 +393,12 @@ function renderApp() {
             <div class="glass-panel p-6 rounded-2xl border border-slate-800">
                 <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
                     <h3 class="font-extrabold text-xl text-indigo-400">${isHi ? '✅ स्मार्ट छात्र उपस्थिति' : '✅ Smart Student Attendance'}</h3>
-                    <div class="flex gap-2">
+                    <div class="flex flex-wrap gap-2">
                         <select onchange="selectedAttClass=this.value; renderApp()" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold">
                             ${classes.map(c => `<option value="${c}" ${selectedAttClass === c ? 'selected' : ''}>${c}</option>`).join('')}
                         </select>
                         <input type="date" value="${selectedAttDate}" onchange="selectedAttDate=this.value" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold">
+                        <button onclick="exportAttendanceExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
@@ -382,6 +424,7 @@ function renderApp() {
             </div>
         `;
     }
+    // 3. Students & Admission + Excel Export
     else if (activeTab === 'students') {
         html = `
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -403,7 +446,10 @@ function renderApp() {
                     </form>
                 </div>
                 <div class="lg:col-span-2 glass-panel p-5 rounded-2xl border border-slate-800 overflow-x-auto">
-                    <h3 class="font-bold text-lg mb-4">Students (${students.length})</h3>
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-lg">Students (${students.length})</h3>
+                        <button onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
+                    </div>
                     <table class="w-full text-left text-sm">
                         <tbody>
                             ${students.map((s, idx) => `
@@ -423,10 +469,14 @@ function renderApp() {
             </div>
         `;
     }
+    // 4. Fees & WhatsApp + Excel Export
     else if (activeTab === 'fees') {
         html = `
             <div class="glass-panel p-5 rounded-2xl border border-slate-800 overflow-x-auto">
-                <h3 class="font-bold text-lg mb-4">💰 Fees & WhatsApp</h3>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg">💰 Fees & WhatsApp</h3>
+                    <button onclick="exportFeesExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
+                </div>
                 <table class="w-full text-left text-sm">
                     <tbody>
                         ${students.map((s, idx) => {
@@ -449,6 +499,7 @@ function renderApp() {
             <div id="modal-area" class="mt-6"></div>
         `;
     }
+    // 5. Accounts + Excel Export
     else if (activeTab === 'accounts') {
         const inc = students.reduce((s, x) => s + Number(x.paidFee), 0);
         const exp = expenses.reduce((s, x) => s + Number(x.amount), 0);
@@ -459,15 +510,19 @@ function renderApp() {
                 <div class="glass-panel p-5 rounded-2xl border border-indigo-500/30"><div class="text-xs text-slate-400">Net Balance</div><div class="text-2xl font-extrabold text-indigo-400">₹${inc - exp}</div></div>
             </div>
             <div class="glass-panel p-5 rounded-2xl border border-slate-800">
-                <form onsubmit="addExpense(event)" class="flex flex-wrap gap-2 mb-4">
-                    <input type="text" id="exp-title" required placeholder="Expense Title *" class="flex-1 px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-sm">
-                    <input type="number" id="exp-amount" required placeholder="Amount *" class="w-32 px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-sm">
-                    <button type="submit" class="bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-bold">+ Add Expense</button>
-                </form>
-                ${expenses.map((ex, idx) => `<div class="flex justify-between py-2 border-b border-slate-800 text-sm"><span>${ex.title}</span><span class="text-rose-400 font-bold">₹${ex.amount} <button onclick="expenses.splice(${idx},1); saveData(); renderApp()" class="ml-2 text-xs">🗑️</button></span></div>`).join('')}
+                <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
+                    <form onsubmit="addExpense(event)" class="flex flex-wrap gap-2 flex-1">
+                        <input type="text" id="exp-title" required placeholder="Expense Title *" class="flex-1 px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-sm">
+                        <input type="number" id="exp-amount" required placeholder="Amount *" class="w-32 px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-sm">
+                        <button type="submit" class="bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-bold">+ Add Expense</button>
+                    </form>
+                    <button onclick="exportAccountsExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
+                </div>
+                ${expenses.map((ex, idx) => `<div class="flex justify-between py-2 border-b border-slate-800 text-sm"><span>${ex.title} (${ex.date})</span><span class="text-rose-400 font-bold">₹${ex.amount} <button onclick="expenses.splice(${idx},1); saveData(); renderApp()" class="ml-2 text-xs">🗑️</button></span></div>`).join('')}
             </div>
         `;
     }
+    // 6. Library
     else if (activeTab === 'library') {
         html = `
             <div class="glass-panel p-6 rounded-2xl border border-slate-800">
@@ -483,6 +538,7 @@ function renderApp() {
             </div>
         `;
     }
+    // 7. Notices
     else if (activeTab === 'notices') {
         html = `
             <div class="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
@@ -495,6 +551,7 @@ function renderApp() {
             </div>
         `;
     }
+    // 8. Exams
     else if (activeTab === 'exams') {
         html = `
             <div class="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
@@ -516,36 +573,13 @@ function renderApp() {
     mainEl.innerHTML = html;
 }
 
-// Helper Functions
-function addInstitutePost(e) {
-    e.preventDefault();
-    const val = document.getElementById('inst-new-post').value.trim();
-    if (!val || !currentCollege) return;
-    if (!currentCollege.customPosts) currentCollege.customPosts = [];
-    if (!currentCollege.customPosts.includes(val)) {
-        currentCollege.customPosts.push(val);
-        let allCols = JSON.parse(localStorage.getItem('vs_colleges_db')) || defaultColleges;
-        const cIdx = allCols.findIndex(c => c.slug === currentCollege.slug);
-        if (cIdx !== -1) { allCols[cIdx] = currentCollege; localStorage.setItem('vs_colleges_db', JSON.stringify(allCols)); }
-    }
-    renderApp();
-}
-
-function deleteInstitutePost(pIdx) {
-    if (!currentCollege || !currentCollege.customPosts) return;
-    currentCollege.customPosts.splice(pIdx, 1);
-    let allCols = JSON.parse(localStorage.getItem('vs_colleges_db')) || defaultColleges;
-    const cIdx = allCols.findIndex(c => c.slug === currentCollege.slug);
-    if (cIdx !== -1) { allCols[cIdx] = currentCollege; localStorage.setItem('vs_colleges_db', JSON.stringify(allCols)); }
-    renderApp();
-}
-
+// Helper & Excel Export Functions
 function saveUserForm(e) {
     e.preventDefault();
     const uData = {
         id: editingUserIndex !== null ? appUsers[editingUserIndex].id : "USR" + Date.now(),
         name: document.getElementById('new-u-fullname').value.trim(),
-        roleLabel: document.getElementById('new-u-role').value,
+        roleLabel: document.getElementById('new-u-role').value.trim(),
         username: document.getElementById('new-u-username').value.trim(),
         password: document.getElementById('new-u-password').value.trim(),
         powers: {
@@ -575,4 +609,30 @@ function addNotice(e) { e.preventDefault(); notices.unshift({ id: Date.now(), ti
 function printReceipt(idx) { const s = students[idx]; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-6 rounded-2xl border-2 border-slate-800 max-w-xl mx-auto"><h2 class="text-xl font-bold text-center border-b pb-2 mb-3">${orgName} — Fee Receipt</h2><p class="text-sm"><strong>Student:</strong> ${s.name} | <strong>Paid:</strong> ₹${s.paidFee} | <strong>Due:</strong> ₹${s.totalFee - s.paidFee}</p><button onclick="window.print()" class="no-print mt-4 bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print</button></div>`; }
 function viewMarksheet(idx) { const s = students[idx]; const t = s.marks.hindi + s.marks.english + s.marks.math + s.marks.science; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-6 rounded-2xl border-2 border-amber-700 max-w-xl mx-auto"><h2 class="text-xl font-bold text-center border-b pb-2 mb-3">${orgName} — Report Card</h2><p class="text-sm"><strong>Student:</strong> ${s.name} | <strong>Total:</strong> ${t} / 400</p><button onclick="window.print()" class="no-print mt-4 bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print</button></div>`; }
 function viewIDCard(idx) { const s = students[idx]; document.getElementById('modal-area').innerHTML = `<div class="bg-white text-slate-900 p-5 rounded-2xl border-2 border-indigo-600 max-w-xs mx-auto text-center"><h3 class="font-bold text-indigo-700">${orgName}</h3><div class="text-lg font-bold mt-2">${s.name}</div><div class="text-xs">${s.class} | Roll: ${s.roll}</div></div>`; }
-function exportCSV() { let csv = "Roll,Name,Class,PaidFee\n"; students.forEach(s => { csv += `${s.roll},"${s.name}","${s.class}",${s.paidFee}\n`; }); const l = document.createElement("a"); l.href = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' })); l.download = `${orgName}_Report.csv`; l.click(); }
+
+// All-Module Excel Exports
+function exportCSV() {
+    let csv = "Roll,Student Name,Father Name,Class,Mobile,Total Fee,Paid Fee,Due Fee\n";
+    students.forEach(s => { csv += `"${s.roll}","${s.name}","${s.father}","${s.class}","${s.mobile}",${s.totalFee},${s.paidFee},${s.totalFee - s.paidFee}\n`; });
+    downloadCSVFile(csv, `${orgName}_Students_Master_Report.csv`);
+}
+function exportFeesExcel() {
+    let csv = "Roll,Student Name,Class,Mobile,Total Fee,Paid Fee,Balance Due\n";
+    students.forEach(s => { csv += `"${s.roll}","${s.name}","${s.class}","${s.mobile}",${s.totalFee},${s.paidFee},${s.totalFee - s.paidFee}\n`; });
+    downloadCSVFile(csv, `${orgName}_Fees_Ledger.csv`);
+}
+function exportAttendanceExcel() {
+    let csv = "Date,Roll,Student Name,Class,Attendance Status,Remark\n";
+    students.forEach(s => { csv += `"${selectedAttDate}","${s.roll}","${s.name}","${s.class}","${s.attStatus}","${s.attRemark || ''}"\n`; });
+    downloadCSVFile(csv, `${orgName}_Attendance_${selectedAttDate}.csv`);
+}
+function exportAccountsExcel() {
+    let csv = "Date,Expense Description,Amount\n";
+    expenses.forEach(ex => { csv += `"${ex.date}","${ex.title}",${ex.amount}\n`; });
+    downloadCSVFile(csv, `${orgName}_Expenses_Ledger.csv`);
+}
+function exportStaffLoginsExcel() {
+    let csv = "Staff Name,Custom Post,Username,Password\n";
+    appUsers.forEach(u => { csv += `"${u.name}","${u.roleLabel}","${u.username}","${u.password}"\n`; });
+    downloadCSVFile(csv, `${orgName}_Staff_Logins.csv`);
+}
