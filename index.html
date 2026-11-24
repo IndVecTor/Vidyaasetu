@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>स्मार्ट स्कूल एवं कॉलेज ERP - लाइव डेमो</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Devanagari', sans-serif;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-100 transition-colors duration-200">
+
+    <!-- 1. सबसे ऊपर सेल्स और ब्रांडिंग पट्टी -->
+    <div class="no-print bg-indigo-600 text-white text-xs sm:text-sm py-2 px-4 flex flex-wrap justify-between items-center gap-2 shadow">
+        <div>
+            🚀 <strong>लाइव डेमो पोर्टल:</strong> अपने स्कूल, कॉलेज या संस्था के नाम से ऐसा ही सॉफ्टवेयर बनवाने के लिए संपर्क करें: 
+            <span class="underline font-bold">अमन कुमार (8574210020)</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button onclick="toggleTheme()" class="bg-indigo-800 hover:bg-indigo-700 px-3 py-1 rounded text-xs font-medium">
+                🌓 थीम बदलें
+            </button>
+            <button onclick="resetDemoData()" class="bg-rose-600 hover:bg-rose-500 px-3 py-1 rounded text-xs font-medium">
+                🔄 डेटा रीसेट करें
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. डेमो लॉगिन स्क्रीन -->
+    <div id="login-screen" class="min-h-[90vh] flex flex-col justify-center items-center p-4">
+        <div class="max-w-xl w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700">
+            <div class="text-center mb-6">
+                <span class="inline-block bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-bold px-3 py-1 rounded-full mb-2">
+                    100% क्लाउड आधारित डिजिटल मैनेजमेंट
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
+                    स्मार्ट संस्थान ERP डेमो
+                </h1>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    अपने संस्थान का नाम व लोगो डालें और नीचे किसी भी पैनल पर क्लिक करके लाइव चलाकर देखें
+                </p>
+            </div>
+
+            <!-- क्लाइंट के स्कूल का नाम और लोगो डालने का बॉक्स -->
+            <div class="mb-6 bg-slate-100 dark:bg-slate-700/50 p-4 rounded-xl space-y-3">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                        अपने स्कूल / कॉलेज / कोचिंग का नाम लिखें:
+                    </label>
+                    <input type="text" id="custom-org-name" placeholder="उदाहरण: आदर्श विद्या मंदिर इंटर कॉलेज" 
+                        class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                        संस्थान का लोगो चुनें (वैकल्पिक):
+                    </label>
+                    <input type="file" id="custom-org-logo" accept="image/*" onchange="handleLogoUpload(event)"
+                        class="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700">
+                </div>
+            </div>
+
+            <!-- 1-क्लिक लॉगिन बटन -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button onclick="enterDemo('admin')" class="flex flex-col items-center p-4 rounded-xl border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition text-center">
+                    <span class="text-2xl mb-1">🏫</span>
+                    <span class="font-bold text-indigo-700 dark:text-indigo-300">प्रिंसिपल / एडमिन</span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">पूरा कंट्रोल, फीस व रिपोर्ट</span>
+                </button>
+
+                <button onclick="enterDemo('teacher')" class="flex flex-col items-center p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition text-center">
+                    <span class="text-2xl mb-1">👨‍🏫</span>
+                    <span class="font-bold text-emerald-700 dark:text-emerald-400">टीचर पैनल</span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">हाज़िरी और नंबर एंट्री</span>
+                </button>
+
+                <button onclick="enterDemo('student')" class="flex flex-col items-center p-4 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition text-center">
+                    <span class="text-2xl mb-1">🎓</span>
+                    <span class="font-bold text-amber-700 dark:text-amber-400">छात्र / अभिभावक</span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">रसीद, रिजल्ट व आईडी कार्ड</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. मुख्य ERP डैशबोर्ड -->
+    <div id="dashboard-screen" class="hidden min-h-screen flex flex-col">
+        <header class="no-print bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+            <div class="flex items-center gap-3">
+                <div id="header-logo-box" class="w-11 h-11 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xl overflow-hidden border border-slate-200 dark:border-slate-600">
+                    🏫
+                </div>
+                <div>
+                    <h2 id="display-org-name" class="font-bold text-lg sm:text-xl text-slate-900 dark:text-white leading-tight">
+                        आदर्श विद्या मंदिर इंटर कॉलेज
+                    </h2>
+                    <span id="display-role-badge" class="text-xs font-medium px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                        एडमिन पैनल
+                    </span>
+                </div>
+            </div>
+
+            <button onclick="logoutDemo()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 px-4 py-2 rounded-lg text-sm font-semibold">
+                🚪 भूमिका बदलें (लॉगआउट)
+            </button>
+        </header>
+
+        <main id="main-content" class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6"></main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
