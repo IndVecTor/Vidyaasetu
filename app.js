@@ -15,30 +15,23 @@ const defaultStudents = [
     {
         id: "STU101", name: "Aarav Sharma", father: "Rajesh Sharma", class: "Class 10", roll: "101", mobile: "9876543210",
         totalFee: 12000, paidFee: 12000, attStatus: "P", attRemark: "On Time", monthlyPercent: 94,
-        feeHistory: [
-            { receiptNo: "REC-48210", date: "2026-11-15", amount: 6000, mode: "UPI / QR", remark: "2nd Final Installment" },
-            { receiptNo: "REC-10492", date: "2026-07-10", amount: 6000, mode: "Cash", remark: "1st Admission Installment" }
-        ],
+        feeHistory: [{ receiptNo: "REC-48210", date: "2026-11-15", amount: 12000, mode: "UPI / QR", remark: "Annual Fee" }],
         marks: { hindi: 88, english: 84, math: 95, science: 91 }
     },
     {
         id: "STU102", name: "Ananya Verma", father: "Suresh Verma", class: "Class 10", roll: "102", mobile: "9876543211",
         totalFee: 12000, paidFee: 8000, attStatus: "L", attRemark: "Medical Leave", monthlyPercent: 88,
-        feeHistory: [
-            { receiptNo: "REC-33910", date: "2026-08-05", amount: 8000, mode: "Bank Transfer", remark: "1st Installment" }
-        ],
+        feeHistory: [{ receiptNo: "REC-33910", date: "2026-08-05", amount: 8000, mode: "Cash", remark: "1st Installment" }],
         marks: { hindi: 92, english: 89, math: 78, science: 85 }
     }
 ];
 
 const defaultExpenses = [{ id: 1, title: "Electricity & Internet Bill", amount: 3200, date: "10/11/2026" }];
-const defaultNotices = [{ id: 1, title: "Welcome to Digital Campus", body: "All academic and fee records are now live on VidyaSetu.", date: "24/11/2026" }];
-const defaultSeats = Array.from({ length: 20 }, (_, i) => ({ seatNo: i + 1, status: i === 0 ? "booked" : "available", studentName: i === 0 ? "Aarav Sharma" : "" }));
+const defaultNotices = [{ id: 1, title: "Welcome to Digital Campus", body: "All records are now live on VidyaSetu Multiplex ERP.", date: "24/11/2026" }];
 
 let students = [];
 let expenses = [];
 let notices = [];
-let librarySeats = [];
 let orgName = "VidyaSetu Institute";
 let orgLogo = "";
 
@@ -55,8 +48,9 @@ function loadCollegeWorkspaceData(colObj) {
     students = JSON.parse(localStorage.getItem(storagePrefix + 'students')) || JSON.parse(JSON.stringify(defaultStudents));
     expenses = JSON.parse(localStorage.getItem(storagePrefix + 'expenses')) || JSON.parse(JSON.stringify(defaultExpenses));
     notices = JSON.parse(localStorage.getItem(storagePrefix + 'notices')) || JSON.parse(JSON.stringify(defaultNotices));
-    librarySeats = JSON.parse(localStorage.getItem(storagePrefix + 'seats')) || JSON.parse(JSON.stringify(defaultSeats));
     if (typeof loadCurrentInstituteStaff === 'function') loadCurrentInstituteStaff();
+    if (typeof loadLibraryProData === 'function') loadLibraryProData();
+    if (typeof loadCoachingProData === 'function') loadCoachingProData();
 }
 
 if (collegeSlug) {
@@ -69,7 +63,20 @@ function saveData() {
     localStorage.setItem(storagePrefix + 'students', JSON.stringify(students));
     localStorage.setItem(storagePrefix + 'expenses', JSON.stringify(expenses));
     localStorage.setItem(storagePrefix + 'notices', JSON.stringify(notices));
-    localStorage.setItem(storagePrefix + 'seats', JSON.stringify(librarySeats));
+}
+
+// Smooth Scroll Observer (हर टाइल पर स्क्रॉल एनिमेशन लागू करने के लिए)
+function initScrollRevealAnimations() {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) entry.target.classList.add('revealed');
+        });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.glass-panel, .super-tile').forEach((el, i) => {
+        el.classList.add('scroll-reveal');
+        setTimeout(() => observer.observe(el), i * 30);
+    });
 }
 
 function enterSuperAdminInstituteView(slug) {
@@ -80,9 +87,10 @@ function enterSuperAdminInstituteView(slug) {
     superAdminViewingSlug = slug;
     loadCollegeWorkspaceData(targetCol);
 
-    document.getElementById('topbar-org-title').innerText = `${targetCol.name} (Super Admin Live Control)`;
-    document.getElementById('topbar-city-tag').innerText = `• ${targetCol.city} • Managing as Master Admin`;
-    document.getElementById('topbar-logo-box').innerHTML = targetCol.logo ? `<img src="${targetCol.logo}" class="w-full h-full object-cover">` : "🏫";
+    document.getElementById('topbar-org-title').innerText = `${targetCol.name} (Super Admin Control)`;
+    document.getElementById('topbar-cat-pill').innerText = `🏢 ${targetCol.category || 'Institute'}`;
+    document.getElementById('topbar-city-tag').innerText = `• ${targetCol.city} • Live Control`;
+    document.getElementById('topbar-logo-box').innerHTML = targetCol.logo ? `<img src="${targetCol.logo}" class="w-full h-full object-cover">` : "🏢";
     document.getElementById('sidebar-user-badge').innerText = "👑 Master Control Mode";
 
     activeTab = 'dashboard';
@@ -93,6 +101,7 @@ function exitSuperAdminInstituteView() {
     superAdminViewingSlug = null;
     currentCollege = null;
     document.getElementById('topbar-org-title').innerText = "VidyaSetu Central Master Control";
+    document.getElementById('topbar-cat-pill').innerText = "👑 Multiplex HQ";
     document.getElementById('topbar-city-tag').innerText = "• Global Admin Console";
     document.getElementById('topbar-logo-box').innerHTML = "👑";
     document.getElementById('sidebar-user-badge').innerText = "● Master Owner";
@@ -135,7 +144,7 @@ function toggleLanguage() {
     currentLang = currentLang === 'en' ? 'hi' : 'en';
     localStorage.setItem('vidyasetu_lang', currentLang);
     syncAnimatedSwitches();
-    if (!document.getElementById('landing-view').classList.contains('hidden')) renderVidyaSetuLandingPage();
+    if (!document.getElementById('landing-view').classList.contains('hidden')) { renderVidyaSetuLandingPage(); initScrollRevealAnimations(); }
     if (!document.getElementById('login-screen').classList.contains('hidden')) updateLoginScreenLanguage();
     if (loggedUser) { updateSidebarStaticText(); renderApp(); }
 }
@@ -143,30 +152,45 @@ function toggleLanguage() {
 function toggleTheme() {
     document.documentElement.classList.toggle('dark');
     syncAnimatedSwitches();
-    if (!document.getElementById('landing-view').classList.contains('hidden')) renderVidyaSetuLandingPage();
+    if (!document.getElementById('landing-view').classList.contains('hidden')) { renderVidyaSetuLandingPage(); initScrollRevealAnimations(); }
 }
 
 window.onload = function() {
     syncAnimatedSwitches();
     if (portalMode === 'superadmin') {
         document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('login-role-selector-box').classList.add('hidden');
         updateLoginScreenLanguage();
     } else if (collegeSlug) {
         if (!currentCollege) {
-            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-rose-500">404 • Invalid Institute URL</h1><p class="text-sm text-slate-400 mt-2">This institute link does not exist on VidyaSetu.</p><a href="?" class="mt-4 bg-indigo-600 text-white px-5 py-2 rounded-xl text-xs font-bold">Go to VidyaSetu Home</a></div>`;
+            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-rose-500">404 • Invalid Institute URL</h1><p class="text-sm adaptive-sub mt-2">This institute link does not exist.</p><a href="?" class="mt-4 bg-indigo-600 text-white px-5 py-2 rounded-xl text-xs font-bold">Go to VidyaSetu Home</a></div>`;
             return;
         }
         if (!currentCollege.active) {
-            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-amber-500">⛔ Subscription Suspended</h1><p class="text-sm text-slate-400 mt-2">The portal for <strong>${currentCollege.name}</strong> is currently inactive.</p></div>`;
+            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-amber-500">⛔ Subscription Suspended</h1><p class="text-sm adaptive-sub mt-2">Portal for <strong>${currentCollege.name}</strong> is inactive.</p></div>`;
             return;
         }
         document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('login-role-selector-box').classList.remove('hidden');
         updateLoginScreenLanguage();
     } else {
         document.getElementById('landing-view').classList.remove('hidden');
         renderVidyaSetuLandingPage();
+        initScrollRevealAnimations();
     }
 };
+
+function updateRoleHint() {
+    if (!currentCollege) return;
+    const isHi = currentLang === 'hi';
+    const roleVal = document.getElementById('login-role-select').value;
+    const hintEl = document.getElementById('demo-credentials-hint');
+    if (roleVal === 'admin') {
+        hintEl.innerHTML = isHi ? `एडमिन ID: <strong class="text-indigo-400">${currentCollege.adminUser}</strong> | पासवर्ड: <strong class="text-indigo-400">${currentCollege.adminPass}</strong>` : `Master Admin ID: <strong class="text-indigo-400">${currentCollege.adminUser}</strong> | Password: <strong class="text-indigo-400">${currentCollege.adminPass}</strong>`;
+    } else {
+        hintEl.innerHTML = isHi ? `स्टाफ डेमो ID: <strong class="text-emerald-400">clerk1</strong> या <strong class="text-emerald-400">teacher1</strong> (पासवर्ड: 123)` : `Staff Demo ID: <strong class="text-emerald-400">clerk1</strong> or <strong class="text-emerald-400">teacher1</strong> (Pass: 123)`;
+    }
+}
 
 function updateLoginScreenLanguage() {
     const isHi = currentLang === 'hi';
@@ -184,13 +208,14 @@ function updateLoginScreenLanguage() {
         titleEl.innerText = isHi ? "👑 विद्यासेतु मास्टर कंट्रोल पैनल" : "👑 VidyaSetu Master Control Panel";
         subEl.innerText = isHi ? "केवल सिस्टम मालिक के लिए प्रतिबंधित प्रवेश" : "Restricted Access • System Owner Only";
         logoEl.innerHTML = "👑";
-        btnEl.className = "w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-3 rounded-xl shadow-lg transition";
+        btnEl.className = "super-btn w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-3 rounded-xl shadow-lg";
         hintEl.innerHTML = `Username: <strong class="text-purple-400">superadmin</strong> | Password: <strong class="text-purple-400">123</strong>`;
     } else if (currentCollege) {
+        document.getElementById('login-category-badge').innerText = currentCollege.category || "VidyaSetu Institute";
         titleEl.innerText = currentCollege.name;
-        subEl.innerText = isHi ? "संस्थान एडमिन एवं स्टाफ लॉगिन पोर्टल" : "Institute Admin & Staff Login Portal";
-        logoEl.innerHTML = currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏫";
-        hintEl.innerHTML = isHi ? `एडमिन लॉगिन: <strong>${currentCollege.adminUser}</strong> (पासवर्ड: ${currentCollege.adminPass}) | स्टाफ: <strong>clerk1</strong>` : `Admin Login: <strong>${currentCollege.adminUser}</strong> (Pass: ${currentCollege.adminPass}) | Staff: <strong>clerk1</strong>`;
+        subEl.innerText = isHi ? "अपना पद (Role) चुनें और लॉगिन करें" : "Choose your role from dropdown and sign in";
+        logoEl.innerHTML = currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏢";
+        updateRoleHint();
     }
 }
 
@@ -211,20 +236,23 @@ function handleLogin(e) {
         loggedUser = { type: 'superadmin', name: superAdminCredentials.name, roleLabel: "Master Owner" };
         errBox.classList.add('hidden'); openDashboard(); return;
     } else if (currentCollege) {
-        // 1. Institute Admin Check
-        if (u === currentCollege.adminUser && p === currentCollege.adminPass) {
-            loggedUser = { type: 'admin', name: "Institute Admin", roleLabel: "Master Admin", powers: currentCollege.powers };
-            errBox.classList.add('hidden'); openDashboard(); return;
-        }
-        // 2. Staff Login Check (केवल वे स्टाफ लॉगिन करेंगे जिन्हें Username व Password दिया गया है)
-        loadCurrentInstituteStaff();
-        const foundStaff = staffList.find(st => st.username && st.password && st.username === u && st.password === p);
-        if (foundStaff) {
-            loggedUser = { type: 'user', name: foundStaff.name, roleLabel: foundStaff.role || "Staff", powers: foundStaff.powers || {} };
-            errBox.classList.add('hidden'); openDashboard(); return;
+        const selectedRole = document.getElementById('login-role-select').value;
+
+        if (selectedRole === 'admin') {
+            if (u === currentCollege.adminUser && p === currentCollege.adminPass) {
+                loggedUser = { type: 'admin', name: "Institute Admin", roleLabel: "Master Admin", powers: currentCollege.powers };
+                errBox.classList.add('hidden'); openDashboard(); return;
+            }
+        } else if (selectedRole === 'staff') {
+            loadCurrentInstituteStaff();
+            const foundStaff = staffList.find(st => st.username && st.password && st.username === u && st.password === p);
+            if (foundStaff) {
+                loggedUser = { type: 'user', name: foundStaff.name, roleLabel: foundStaff.role || "Staff", powers: foundStaff.powers || {} };
+                errBox.classList.add('hidden'); openDashboard(); return;
+            }
         }
     }
-    errBox.innerText = isHi ? "❌ गलत यूज़रनेम या पासवर्ड (या इस स्टाफ को लॉगिन की अनुमति नहीं है)!" : "❌ Invalid Username/Password or Login Not Enabled!";
+    errBox.innerText = isHi ? "❌ चुने गए पद के लिए गलत यूज़रनेम या पासवर्ड!" : "❌ Invalid Username or Password for selected Role!";
     errBox.classList.remove('hidden');
 }
 
@@ -233,8 +261,9 @@ function openDashboard() {
     document.getElementById('dashboard-screen').classList.remove('hidden');
 
     document.getElementById('topbar-org-title').innerText = loggedUser.type === 'superadmin' ? "VidyaSetu Central Master Control" : currentCollege.name;
+    document.getElementById('topbar-cat-pill').innerText = loggedUser.type === 'superadmin' ? "👑 Multiplex HQ" : `🏢 ${currentCollege.category || 'Institute'}`;
     document.getElementById('topbar-city-tag').innerText = loggedUser.type === 'superadmin' ? "• Global Admin Console" : `• ${currentCollege.city} • Session 2026-27`;
-    document.getElementById('topbar-logo-box').innerHTML = loggedUser.type === 'superadmin' ? "👑" : (currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏫");
+    document.getElementById('topbar-logo-box').innerHTML = loggedUser.type === 'superadmin' ? "👑" : (currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏢");
     
     document.getElementById('sidebar-user-badge').innerText = `● ${loggedUser.roleLabel}`;
     document.getElementById('logged-user-name').innerText = loggedUser.name;
@@ -262,8 +291,8 @@ function getDynamicMenuItems() {
     if (loggedUser.type === 'superadmin' && !superAdminViewingSlug) {
         return [
             { id: 'super_analytics', icon: '📊', label: isHi ? 'सुपर एनालिटिक्स' : 'Super Analytics' },
-            { id: 'super_colleges', icon: '🏫', label: isHi ? 'संस्थान व कस्टम URL' : 'Institutes & URLs' },
-            { id: 'super_leads', icon: '📩', label: isHi ? 'सब्स्क्रिप्शन फॉर्म डेटा' : 'Subscription Leads' }
+            { id: 'super_colleges', icon: '🏢', label: isHi ? 'मल्टीप्लेक्स संस्थान व URL' : 'Multiplex Institutes' },
+            { id: 'super_leads', icon: '📩', label: isHi ? 'सब्स्क्रिप्शन Leads' : 'Subscription Leads' }
         ];
     }
 
@@ -272,12 +301,12 @@ function getDynamicMenuItems() {
         const items = [];
         if (superAdminViewingSlug) items.push({ id: 'exit_inst_view', icon: '🔙', label: isHi ? 'सुपर एडमिन पर लौटें' : 'Back to Super Admin' });
         items.push({ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' });
-        if (cp.allowAdmission || superAdminViewingSlug) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
+        if (cp.allowLibrary || superAdminViewingSlug) items.push({ id: 'library_pro', icon: '📖', label: isHi ? 'लाइब्रेरी सीट व शिफ्ट' : 'Library Pro & Shifts' });
+        if (cp.allowCoaching || superAdminViewingSlug) items.push({ id: 'coaching_pro', icon: '💻', label: isHi ? 'कोचिंग बैच व सर्टिफिकेट' : 'Coaching & Certificates' });
+        if (cp.allowAdmission || superAdminViewingSlug) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र / सदस्य एडमिशन' : 'Students & Members' });
         if (cp.allowFees || superAdminViewingSlug) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व रसीद डैशबोर्ड' : 'Fees & Receipts' });
-        // डेडिकेटेड Staff Management बटन (Add Staff + Personal Details + Optional Login + Payroll)
         if (cp.allowPayroll || superAdminViewingSlug) items.push({ id: 'staff', icon: '👔', label: isHi ? 'स्टाफ प्रबंधन (Staff)' : 'Staff Management' });
         if (cp.allowAccounts || superAdminViewingSlug) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
-        if (cp.allowLibrary || superAdminViewingSlug) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
         if (cp.allowNotices || superAdminViewingSlug) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
         if (cp.allowAttendance || superAdminViewingSlug) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
         if (cp.allowExams || superAdminViewingSlug) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
@@ -287,11 +316,12 @@ function getDynamicMenuItems() {
     const p = loggedUser.powers;
     const items = [];
     if (p.dashboard) items.push({ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' });
+    if (p.library && cp.allowLibrary) items.push({ id: 'library_pro', icon: '📖', label: isHi ? 'लाइब्रेरी सीट व शिफ्ट' : 'Library Pro & Shifts' });
+    if (p.students && cp.allowCoaching) items.push({ id: 'coaching_pro', icon: '💻', label: isHi ? 'कोचिंग बैच व सर्टिफिकेट' : 'Coaching & Certificates' });
     if (p.students && cp.allowAdmission) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
     if (p.fees && cp.allowFees) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व रसीद डैशबोर्ड' : 'Fees & Receipts' });
     if (p.staff && cp.allowPayroll) items.push({ id: 'staff', icon: '👔', label: isHi ? 'स्टाफ प्रबंधन (Staff)' : 'Staff Management' });
     if (p.accounts && cp.allowAccounts) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
-    if (p.library && cp.allowLibrary) items.push({ id: 'library', icon: '🪑', label: isHi ? 'लाइब्रेरी सीटें' : 'Library Seats' });
     if (p.notices && cp.allowNotices) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
     if (p.attendance && cp.allowAttendance) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
     if (p.exams && cp.allowExams) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
@@ -307,6 +337,7 @@ function switchTab(tabId) {
     void main.offsetWidth;
     main.classList.add('tab-transition');
     renderApp();
+    initScrollRevealAnimations();
 }
 
 function renderApp() {
@@ -316,7 +347,7 @@ function renderApp() {
     const menuItems = getDynamicMenuItems();
 
     navEl.innerHTML = menuItems.map(item => `
-        <button onclick="switchTab('${item.id}')" class="nav-btn flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${item.id === 'exit_inst_view' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30 mb-2' : (activeTab === item.id ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800/80')}">
+        <button onclick="switchTab('${item.id}')" class="nav-btn flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap ${item.id === 'exit_inst_view' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 mb-2' : (activeTab === item.id ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30' : 'adaptive-sub hover:bg-indigo-500/10')}">
             <span class="text-base">${item.icon}</span>
             <span>${item.label}</span>
         </button>
@@ -326,40 +357,41 @@ function renderApp() {
     if (activeTab === 'super_colleges') { mainEl.innerHTML = renderSuperAdminColleges(); return; }
     if (activeTab === 'super_leads') { mainEl.innerHTML = renderSubscriptionLeadsInbox(); return; }
     if (activeTab === 'dashboard') { mainEl.innerHTML = renderHighTechDashboard(); return; }
+    if (activeTab === 'library_pro') { mainEl.innerHTML = renderLibraryProModule(); return; }
+    if (activeTab === 'coaching_pro') { mainEl.innerHTML = renderCoachingProModule(); return; }
     if (activeTab === 'fees') { mainEl.innerHTML = renderFeesDashboardModule(); return; }
     if (activeTab === 'staff') { mainEl.innerHTML = renderStaffManagementModule(); return; }
 
     let html = "";
-
     if (activeTab === 'attendance') {
         const classes = ["ALL", ...new Set(students.map(s => s.class))];
         const filtered = selectedAttClass === "ALL" ? students : students.filter(s => s.class === selectedAttClass);
         html = `
-            <div class="glass-panel p-6 rounded-2xl border border-slate-800">
+            <div class="glass-panel p-6 rounded-3xl">
                 <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
-                    <h3 class="font-extrabold text-xl text-indigo-400">${isHi ? '✅ स्मार्ट छात्र उपस्थिति' : '✅ Smart Student Attendance'}</h3>
+                    <h3 class="font-extrabold text-xl text-indigo-500">✅ Smart Student Attendance</h3>
                     <div class="flex flex-wrap gap-2">
-                        <select onchange="selectedAttClass=this.value; renderApp()" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold">
+                        <select onchange="selectedAttClass=this.value; renderApp()" class="px-3 py-2 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent text-xs font-bold">
                             ${classes.map(c => `<option value="${c}" ${selectedAttClass === c ? 'selected' : ''}>${c}</option>`).join('')}
                         </select>
-                        <input type="date" value="${selectedAttDate}" onchange="selectedAttDate=this.value" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold">
-                        <button onclick="exportAttendanceExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
+                        <input type="date" value="${selectedAttDate}" onchange="selectedAttDate=this.value" class="px-3 py-2 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent text-xs font-bold">
+                        <button onclick="exportAttendanceExcel()" class="super-btn bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
-                        <thead><tr class="border-b border-slate-800 text-slate-400 text-xs"><th class="py-2">Student</th><th class="py-2">Status (P/A/L/H)</th><th class="py-2">Remark</th><th class="py-2">Alert</th></tr></thead>
+                        <thead><tr class="border-b border-slate-300/40 dark:border-slate-800 adaptive-sub text-xs"><th class="py-2">Student</th><th class="py-2">Status (P/A/L/H)</th><th class="py-2">Remark</th><th class="py-2">Alert</th></tr></thead>
                         <tbody>
                             ${filtered.map(s => {
                                 const idx = students.findIndex(x => x.id === s.id);
                                 return `
-                                    <tr class="border-b border-slate-800/60">
-                                        <td class="py-3 font-bold">${s.roll} • ${s.name} <div class="text-xs text-slate-400 font-normal">${s.class}</div></td>
+                                    <tr class="border-b border-slate-300/30 dark:border-slate-800/60">
+                                        <td class="py-3 font-bold adaptive-title">${s.roll} • ${s.name} <div class="text-xs adaptive-sub font-normal">${s.class}</div></td>
                                         <td class="py-3 flex gap-1">
-                                            ${['P','A','L','H'].map(st => `<button onclick="students[${idx}].attStatus='${st}'; saveData(); renderApp()" class="w-7 h-7 rounded text-xs font-bold ${s.attStatus === st ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'}">${st}</button>`).join('')}
+                                            ${['P','A','L','H'].map(st => `<button onclick="students[${idx}].attStatus='${st}'; saveData(); renderApp()" class="super-btn w-7 h-7 rounded text-xs font-bold ${s.attStatus === st ? 'bg-indigo-600 text-white' : 'bg-slate-200 dark:bg-slate-800 adaptive-sub'}">${st}</button>`).join('')}
                                         </td>
-                                        <td class="py-3"><input type="text" value="${s.attRemark || ''}" onchange="students[${idx}].attRemark=this.value; saveData()" class="px-2 py-1 rounded border border-slate-700 bg-slate-900 text-xs w-36"></td>
-                                        <td class="py-3">${s.attStatus === 'A' ? `<button onclick="sendAbsentWhatsApp(${idx})" class="bg-green-600 text-white px-2.5 py-1 rounded text-xs font-bold">💬 Alert</button>` : '—'}</td>
+                                        <td class="py-3"><input type="text" value="${s.attRemark || ''}" onchange="students[${idx}].attRemark=this.value; saveData()" class="px-2 py-1 rounded border border-slate-400/40 dark:border-slate-700 bg-transparent text-xs w-36"></td>
+                                        <td class="py-3">${s.attStatus === 'A' ? `<button onclick="sendAbsentWhatsApp(${idx})" class="super-btn bg-green-600 text-white px-2.5 py-1 rounded text-xs font-bold">💬 Alert</button>` : '—'}</td>
                                     </tr>
                                 `;
                             }).join('')}
@@ -372,37 +404,37 @@ function renderApp() {
     else if (activeTab === 'students') {
         html = `
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="glass-panel p-5 rounded-2xl border border-slate-800 h-fit">
-                    <h3 class="font-bold text-lg mb-4 text-indigo-400">➕ New Admission</h3>
+                <div class="glass-panel p-5 rounded-3xl h-fit">
+                    <h3 class="font-bold text-lg mb-4 text-indigo-500">➕ New Admission</h3>
                     <form onsubmit="addNewStudent(event)" class="space-y-3 text-sm">
-                        <input type="text" id="stu-name" required placeholder="Student Name *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                        <input type="text" id="stu-father" required placeholder="Father Name *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                        <input type="text" id="stu-name" required placeholder="Student Name *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
+                        <input type="text" id="stu-father" required placeholder="Father Name *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="text" id="stu-class" required placeholder="Class *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                            <input type="text" id="stu-roll" required placeholder="Roll *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            <input type="text" id="stu-class" required placeholder="Class / Batch *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
+                            <input type="text" id="stu-roll" required placeholder="Roll *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
                         </div>
                         <div class="grid grid-cols-2 gap-2">
-                            <input type="number" id="stu-total-fee" required value="12000" placeholder="Total Fee" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                            <input type="number" id="stu-paid-fee" required value="5000" placeholder="Initial Paid" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                            <input type="number" id="stu-total-fee" required value="12000" placeholder="Total Fee" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
+                            <input type="number" id="stu-paid-fee" required value="5000" placeholder="Initial Paid" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
                         </div>
-                        <input type="text" id="stu-mobile" placeholder="WhatsApp No." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
-                        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl">✅ Save Admission</button>
+                        <input type="text" id="stu-mobile" placeholder="WhatsApp No." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
+                        <button type="submit" class="super-btn w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl">✅ Save Admission</button>
                     </form>
                 </div>
-                <div class="lg:col-span-2 glass-panel p-5 rounded-2xl border border-slate-800 overflow-x-auto">
+                <div class="lg:col-span-2 glass-panel p-5 rounded-3xl overflow-x-auto">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="font-bold text-lg">Students (${students.length})</h3>
-                        <button onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
+                        <h3 class="font-bold text-lg adaptive-title">Students / Members (${students.length})</h3>
+                        <button onclick="exportCSV()" class="super-btn bg-emerald-600 text-white px-3 py-1.5 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
                     </div>
                     <table class="w-full text-left text-sm">
                         <tbody>
                             ${students.map((s, idx) => `
-                                <tr class="border-b border-slate-800/50">
-                                    <td class="py-3 font-bold">${s.roll} • ${s.name}</td>
-                                    <td class="py-3">${s.class}</td>
+                                <tr class="border-b border-slate-300/30 dark:border-slate-800/50">
+                                    <td class="py-3 font-bold adaptive-title">${s.roll} • ${s.name}</td>
+                                    <td class="py-3 adaptive-sub">${s.class}</td>
                                     <td class="py-3 flex gap-2">
-                                        <button onclick="viewIDCard(${idx})" class="bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded text-xs font-bold">🪪 ID</button>
-                                        <button onclick="students.splice(${idx},1); saveData(); renderApp()" class="bg-rose-500/20 text-rose-400 px-2.5 py-1 rounded text-xs">🗑️</button>
+                                        <button onclick="viewIDCard(${idx})" class="super-btn bg-indigo-500/20 text-indigo-400 px-2.5 py-1 rounded text-xs font-bold">🪪 ID</button>
+                                        <button onclick="students.splice(${idx},1); saveData(); renderApp()" class="super-btn bg-rose-500/20 text-rose-400 px-2.5 py-1 rounded text-xs">🗑️</button>
                                     </td>
                                 </tr>
                             `).join('')}
@@ -418,60 +450,45 @@ function renderApp() {
         const exp = expenses.reduce((s, x) => s + Number(x.amount), 0);
         html = `
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div class="glass-panel p-5 rounded-2xl border border-emerald-500/30"><div class="text-xs text-slate-400">Income</div><div class="text-2xl font-extrabold text-emerald-400">₹${inc}</div></div>
-                <div class="glass-panel p-5 rounded-2xl border border-rose-500/30"><div class="text-xs text-slate-400">Expenses</div><div class="text-2xl font-extrabold text-rose-400">₹${exp}</div></div>
-                <div class="glass-panel p-5 rounded-2xl border border-indigo-500/30"><div class="text-xs text-slate-400">Net Balance</div><div class="text-2xl font-extrabold text-indigo-400">₹${inc - exp}</div></div>
+                <div class="glass-panel super-tile p-5 rounded-2xl border border-emerald-500/30"><div class="text-xs adaptive-sub">Income</div><div class="text-2xl font-extrabold text-emerald-500">₹${inc}</div></div>
+                <div class="glass-panel super-tile p-5 rounded-2xl border border-rose-500/30"><div class="text-xs adaptive-sub">Expenses</div><div class="text-2xl font-extrabold text-rose-500">₹${exp}</div></div>
+                <div class="glass-panel super-tile p-5 rounded-2xl border border-indigo-500/30"><div class="text-xs adaptive-sub">Net Balance</div><div class="text-2xl font-extrabold text-indigo-500">₹${inc - exp}</div></div>
             </div>
-            <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+            <div class="glass-panel p-5 rounded-3xl">
                 <div class="flex flex-wrap justify-between items-center gap-2 mb-4">
                     <form onsubmit="addExpense(event)" class="flex flex-wrap gap-2 flex-1">
-                        <input type="text" id="exp-title" required placeholder="Expense Title *" class="flex-1 px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-sm">
-                        <input type="number" id="exp-amount" required placeholder="Amount *" class="w-32 px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-sm">
-                        <button type="submit" class="bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-bold">+ Add Expense</button>
+                        <input type="text" id="exp-title" required placeholder="Expense Title *" class="flex-1 px-3 py-2 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent text-sm">
+                        <input type="number" id="exp-amount" required placeholder="Amount *" class="w-32 px-3 py-2 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent text-sm">
+                        <button type="submit" class="super-btn bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-bold">+ Add Expense</button>
                     </form>
-                    <button onclick="exportAccountsExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
+                    <button onclick="exportAccountsExcel()" class="super-btn bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold">📥 Export Excel</button>
                 </div>
-                ${expenses.map((ex, idx) => `<div class="flex justify-between py-2 border-b border-slate-800 text-sm"><span>${ex.title} (${ex.date})</span><span class="text-rose-400 font-bold">₹${ex.amount} <button onclick="expenses.splice(${idx},1); saveData(); renderApp()" class="ml-2 text-xs">🗑️</button></span></div>`).join('')}
-            </div>
-        `;
-    }
-    else if (activeTab === 'library') {
-        html = `
-            <div class="glass-panel p-6 rounded-2xl border border-slate-800">
-                <h3 class="font-bold text-lg mb-4">🪑 Library Seats</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                    ${librarySeats.map((seat, idx) => `
-                        <div onclick="manageSeat(${idx})" class="cursor-pointer p-4 rounded-2xl border ${seat.status === 'booked' ? 'border-rose-500/50 bg-rose-500/10' : 'border-emerald-500/40 bg-emerald-500/5'}">
-                            <div class="font-bold text-sm">Seat #${seat.seatNo}</div>
-                            <div class="text-xs mt-1">${seat.status === 'booked' ? seat.studentName : '+ Available'}</div>
-                        </div>
-                    `).join('')}
-                </div>
+                ${expenses.map((ex, idx) => `<div class="flex justify-between py-2 border-b border-slate-300/30 dark:border-slate-800 text-sm adaptive-title"><span>${ex.title} (${ex.date})</span><span class="text-rose-500 font-bold">₹${ex.amount} <button onclick="expenses.splice(${idx},1); saveData(); renderApp()" class="ml-2 text-xs">🗑️</button></span></div>`).join('')}
             </div>
         `;
     }
     else if (activeTab === 'notices') {
         html = `
-            <div class="glass-panel p-5 rounded-2xl border border-slate-800 space-y-4">
+            <div class="glass-panel p-5 rounded-3xl space-y-4">
                 <form onsubmit="addNotice(event)" class="space-y-2">
-                    <input type="text" id="not-title" required placeholder="Notice Title *" class="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-sm">
-                    <textarea id="not-body" rows="2" required placeholder="Details *" class="w-full px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-sm"></textarea>
-                    <button type="submit" class="bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold">🚀 Publish</button>
+                    <input type="text" id="not-title" required placeholder="Notice Title *" class="w-full px-3 py-2 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent text-sm">
+                    <textarea id="not-body" rows="2" required placeholder="Details *" class="w-full px-3 py-2 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent text-sm"></textarea>
+                    <button type="submit" class="super-btn bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold">🚀 Publish</button>
                 </form>
-                ${notices.map((n, idx) => `<div class="p-3 rounded-xl border-l-4 border-indigo-500 bg-slate-900/50 flex justify-between"><div><div class="font-bold text-sm">${n.title}</div><p class="text-xs text-slate-400">${n.body}</p></div><button onclick="notices.splice(${idx},1); saveData(); renderApp()" class="text-xs text-rose-400">🗑️</button></div>`).join('')}
+                ${notices.map((n, idx) => `<div class="super-tile p-3 rounded-xl border-l-4 border-indigo-500 flex justify-between"><div><div class="font-bold text-sm adaptive-title">${n.title}</div><p class="text-xs adaptive-sub">${n.body}</p></div><button onclick="notices.splice(${idx},1); saveData(); renderApp()" class="text-xs text-rose-500">🗑️</button></div>`).join('')}
             </div>
         `;
     }
     else if (activeTab === 'exams') {
         html = `
-            <div class="glass-panel p-6 rounded-2xl border border-slate-800 space-y-3">
-                <h3 class="font-bold text-lg">📝 Marksheets & ID Cards</h3>
+            <div class="glass-panel p-6 rounded-3xl space-y-3">
+                <h3 class="font-bold text-lg adaptive-title">📝 Marksheets & ID Cards</h3>
                 ${students.map((s, idx) => `
-                    <div class="p-3 rounded-xl border border-slate-800 flex justify-between items-center">
-                        <span class="font-bold text-sm">${s.name} (${s.class})</span>
+                    <div class="super-tile p-3 rounded-xl border border-slate-300/40 dark:border-slate-800 flex justify-between items-center">
+                        <span class="font-bold text-sm adaptive-title">${s.name} (${s.class})</span>
                         <div class="flex gap-2">
-                            <button onclick="viewMarksheet(${idx})" class="bg-amber-600 text-white px-2.5 py-1 rounded text-xs font-bold">📄 Marksheet</button>
-                            <button onclick="viewIDCard(${idx})" class="bg-indigo-600 text-white px-2.5 py-1 rounded text-xs font-bold">🪪 ID Card</button>
+                            <button onclick="viewMarksheet(${idx})" class="super-btn bg-amber-600 text-white px-2.5 py-1 rounded text-xs font-bold">📄 Marksheet</button>
+                            <button onclick="viewIDCard(${idx})" class="super-btn bg-indigo-600 text-white px-2.5 py-1 rounded text-xs font-bold">🪪 ID Card</button>
                         </div>
                     </div>
                 `).join('')}
@@ -483,7 +500,7 @@ function renderApp() {
     mainEl.innerHTML = html;
 }
 
-// Helper & Excel Export Functions
+// Helper Functions
 function addNewStudent(e) {
     e.preventDefault();
     const initPaid = Number(document.getElementById('stu-paid-fee').value);
@@ -507,7 +524,6 @@ function addNewStudent(e) {
 function sendWhatsAppReminder(idx) { const s = students[idx]; const due = s.totalFee - s.paidFee; window.open(`https://wa.me/91${s.mobile.replace(/\D/g,'')}?text=${encodeURIComponent(`Dear ${s.father}, ₹${due} fee is pending for ${s.name} at ${orgName}.`)}`, '_blank'); }
 function sendAbsentWhatsApp(idx) { const s = students[idx]; window.open(`https://wa.me/91${s.mobile.replace(/\D/g,'')}?text=${encodeURIComponent(`Dear ${s.father}, your ward ${s.name} is ABSENT today (${selectedAttDate}) at ${orgName}.`)}`, '_blank'); }
 function addExpense(e) { e.preventDefault(); expenses.unshift({ id: Date.now(), title: document.getElementById('exp-title').value, amount: Number(document.getElementById('exp-amount').value), date: new Date().toLocaleDateString('en-IN') }); saveData(); renderApp(); }
-function manageSeat(idx) { const seat = librarySeats[idx]; if (seat.status === 'booked') librarySeats[idx] = { seatNo: seat.seatNo, status: "available", studentName: "" }; else { const n = prompt("Student Name:"); if (n) librarySeats[idx] = { seatNo: seat.seatNo, status: "booked", studentName: n }; } saveData(); renderApp(); }
 function addNotice(e) { e.preventDefault(); notices.unshift({ id: Date.now(), title: document.getElementById('not-title').value, body: document.getElementById('not-body').value, date: new Date().toLocaleDateString('en-IN') }); saveData(); renderApp(); }
 
 function viewMarksheet(idx) {
@@ -515,20 +531,20 @@ function viewMarksheet(idx) {
     const t = s.marks.hindi + s.marks.english + s.marks.math + s.marks.science;
     const html = `<div class="bg-white text-slate-900 p-6 rounded-2xl border-2 border-amber-700 max-w-xl mx-auto"><h2 class="text-xl font-bold text-center border-b pb-2 mb-3">${orgName} — Report Card</h2><p class="text-sm"><strong>Student:</strong> ${s.name} (${s.class}) | <strong>Total:</strong> ${t} / 400</p></div>`;
     document.getElementById('print-only-container').innerHTML = html;
-    document.getElementById('modal-area').innerHTML = `${html}<div class="no-print text-center mt-3"><button onclick="window.print()" class="bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print Only Marksheet</button></div>`;
+    document.getElementById('modal-area').innerHTML = `${html}<div class="no-print text-center mt-3"><button onclick="window.print()" class="super-btn bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print Only Marksheet</button></div>`;
 }
 
 function viewIDCard(idx) {
     const s = students[idx];
     const html = `<div class="bg-white text-slate-900 p-5 rounded-2xl border-2 border-indigo-600 max-w-xs mx-auto text-center"><h3 class="font-bold text-indigo-700">${orgName}</h3><div class="text-lg font-bold mt-2">${s.name}</div><div class="text-xs">${s.class} | Roll: ${s.roll}</div></div>`;
     document.getElementById('print-only-container').innerHTML = html;
-    document.getElementById('modal-area').innerHTML = `${html}<div class="no-print text-center mt-3"><button onclick="window.print()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print Only ID Card</button></div>`;
+    document.getElementById('modal-area').innerHTML = `${html}<div class="no-print text-center mt-3"><button onclick="window.print()" class="super-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print Only ID Card</button></div>`;
 }
 
 function exportCSV() {
     let csv = "Roll,Student Name,Father Name,Class,Mobile,Total Fee,Paid Fee,Due Fee\n";
     students.forEach(s => { csv += `"${s.roll}","${s.name}","${s.father}","${s.class}","${s.mobile}",${s.totalFee},${s.paidFee},${s.totalFee - s.paidFee}\n`; });
-    downloadCSVFile(csv, `${orgName}_Students_Master_Report.csv`);
+    downloadCSVFile(csv, `${orgName}_Students_Report.csv`);
 }
 function exportAttendanceExcel() {
     let csv = "Date,Roll,Student Name,Class,Attendance Status,Remark\n";

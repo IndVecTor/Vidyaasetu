@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VidyaSetu ERP | Smart Institute Management</title>
+    <title>VidyaSetu Multiplex ERP | School, College, Coaching & Library</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,21 +13,13 @@
         @media print {
             body * { visibility: hidden !important; }
             #print-only-container, #print-only-container * { visibility: visible !important; }
-            #print-only-container {
-                position: absolute !important;
-                left: 0 !important;
-                top: 0 !important;
-                width: 100% !important;
-                background: white !important;
-                padding: 10px !important;
-            }
+            #print-only-container { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; background: white !important; padding: 10px !important; }
             .no-print { display: none !important; }
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-900 dark:bg-[#050811] dark:text-slate-100 transition-colors duration-300 relative min-h-screen">
+<body class="transition-colors duration-300 relative min-h-screen">
 
-    <!-- Print-Only Container -->
     <div id="print-only-container" class="hidden print:block"></div>
 
     <!-- Ambient Background Glow -->
@@ -36,10 +28,10 @@
         <div class="absolute top-1/2 right-0 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl"></div>
     </div>
 
-    <!-- 1. VidyaSetu Official Landing Page -->
+    <!-- 1. Official Home Page -->
     <div id="landing-view" class="hidden relative z-10"></div>
 
-    <!-- 2. Login Screen -->
+    <!-- 2. Role-Wise Login Screen -->
     <div id="login-screen" class="hidden relative z-10 min-h-screen flex flex-col justify-center items-center p-4 tab-transition">
         <div class="mb-5 flex items-center gap-3">
             <div onclick="toggleLanguage()" class="lang-pill-switch" id="login-lang-pill" title="Switch Language">
@@ -47,57 +39,64 @@
                 <span class="lang-pill-label text-white" id="lbl-pill-en">EN</span>
                 <span class="lang-pill-label text-slate-400" id="lbl-pill-hi">हिं</span>
             </div>
-            <div onclick="toggleTheme()" class="sky-theme-switch" title="Toggle Dark/Light Theme">
+            <div onclick="toggleTheme()" class="sky-theme-switch" title="Toggle Theme">
                 <div class="sky-theme-thumb" id="login-theme-icon">🌙</div>
             </div>
         </div>
 
-        <div class="max-w-md w-full glass-panel rounded-3xl shadow-2xl p-7 sm:p-9 border border-slate-200/80 dark:border-indigo-500/20">
-            <div class="text-center mb-7">
+        <div class="max-w-md w-full glass-panel super-tile rounded-3xl shadow-2xl p-7 sm:p-9">
+            <div class="text-center mb-6">
                 <div id="login-logo-box" class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white mx-auto flex items-center justify-center text-3xl shadow-lg mb-3 overflow-hidden">
                     🌉
                 </div>
-                <div class="inline-block text-[10px] font-extrabold tracking-widest uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full mb-1">
-                    VidyaSetu Cloud Portal
+                <div id="login-category-badge" class="inline-block text-[10px] font-extrabold tracking-widest uppercase text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full mb-1">
+                    VidyaSetu Multiplex Cloud
                 </div>
-                <h1 id="login-portal-title" class="text-2xl font-extrabold text-slate-900 dark:text-white">
+                <h1 id="login-portal-title" class="text-2xl font-extrabold adaptive-title">
                     Institute Login
                 </h1>
-                <p id="login-portal-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Sign in with your assigned Username & Password
+                <p id="login-portal-subtitle" class="text-xs adaptive-sub mt-1">
+                    Select your login role and enter credentials
                 </p>
             </div>
 
             <form onsubmit="handleLogin(event)" class="space-y-4">
+                <!-- Role-Wise Login Dropdown (सुपर एडमिन मोड में छिपा रहेगा, संस्थान URL पर दिखेगा) -->
+                <div id="login-role-selector-box">
+                    <label id="lbl-login-role" class="block text-xs font-bold adaptive-sub mb-1.5">Select Login Role (पद / भूमिका चुनें)</label>
+                    <select id="login-role-select" onchange="updateRoleHint()" class="w-full px-4 py-3 rounded-xl border border-indigo-500/40 bg-slate-100 dark:bg-slate-900 text-sm font-extrabold text-indigo-500 dark:text-indigo-300 outline-none">
+                        <option value="admin">🛡️ Institute Master Admin / Principal</option>
+                        <option value="staff">👔 Staff / Teacher / Clerk / Librarian</option>
+                    </select>
+                </div>
+
                 <div>
-                    <label id="lbl-username" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Username</label>
+                    <label id="lbl-username" class="block text-xs font-bold adaptive-sub mb-1.5">Username</label>
                     <input type="text" id="login-username" required placeholder="Enter your username" autocomplete="off"
                         class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition">
                 </div>
                 <div>
-                    <label id="lbl-password" class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1.5">Password</label>
+                    <label id="lbl-password" class="block text-xs font-bold adaptive-sub mb-1.5">Password</label>
                     <input type="password" id="login-password" required placeholder="••••••••"
                         class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition">
                 </div>
 
                 <div id="login-error" class="hidden text-xs font-bold text-rose-500 bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-center"></div>
 
-                <button type="submit" id="login-submit-btn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-3 rounded-xl shadow-lg transition transform active:scale-[0.98]">
+                <button type="submit" id="login-submit-btn" class="super-btn w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 rounded-xl shadow-lg">
                     🔐 Secure Login
                 </button>
             </form>
 
-            <div id="demo-credentials-hint" class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-400 text-center"></div>
-            <div class="mt-3 text-center text-[10px] text-slate-500">
-                Powered by <a href="?" class="text-indigo-400 font-bold hover:underline">VidyaSetu ERP</a>
+            <div id="demo-credentials-hint" class="mt-5 pt-4 border-t border-slate-300/40 dark:border-slate-800 text-[11px] adaptive-sub text-center"></div>
+            <div class="mt-3 text-center text-[10px] adaptive-sub">
+                Powered by <a href="?" class="text-indigo-500 font-bold hover:underline">VidyaSetu Multiplex ERP</a>
             </div>
         </div>
     </div>
 
-    <!-- 3. App-Shell Layout: Wider Grand Top Header + Clean Left Sidebar -->
+    <!-- 3. App-Shell Layout: Wide Grand Top Header + Clean Left Sidebar -->
     <div id="dashboard-screen" class="hidden relative z-10 min-h-screen flex flex-col">
-        
-        <!-- चौड़ा और भव्य Top Header Bar -->
         <header class="no-print sticky top-0 z-30 glass-panel border-b-2 border-indigo-500/30 px-5 sm:px-10 py-5 shadow-2xl">
             <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-4 sm:gap-5 min-w-0 flex-1">
@@ -106,10 +105,10 @@
                     </div>
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-2 mb-1">
-                            <span class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                            <span id="topbar-cat-pill" class="text-[10px] sm:text-[11px] font-extrabold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
                                 🌉 VidyaSetu Cloud ERP
                             </span>
-                            <span id="topbar-city-tag" class="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                            <span id="topbar-city-tag" class="text-xs adaptive-sub font-semibold">
                                 • Session 2026-27
                             </span>
                         </div>
@@ -120,9 +119,9 @@
                 </div>
 
                 <div class="flex items-center gap-3 shrink-0">
-                    <div class="hidden md:flex flex-col text-right mr-2 bg-slate-200/60 dark:bg-slate-900/70 px-3.5 py-2 rounded-2xl border border-slate-300/60 dark:border-slate-800">
-                        <span id="logged-user-name" class="text-xs font-extrabold text-slate-800 dark:text-white">Active User</span>
-                        <span id="sidebar-user-badge" class="text-[10px] font-bold text-emerald-400">● Online</span>
+                    <div class="hidden md:flex flex-col text-right mr-2 bg-slate-200/70 dark:bg-slate-900/70 px-3.5 py-2 rounded-2xl border border-slate-300/60 dark:border-slate-800">
+                        <span id="logged-user-name" class="text-xs font-extrabold adaptive-title">Active User</span>
+                        <span id="sidebar-user-badge" class="text-[10px] font-bold text-emerald-500">● Online</span>
                     </div>
 
                     <div onclick="toggleLanguage()" class="lang-pill-switch" id="topbar-lang-pill" title="Switch Language">
@@ -139,16 +138,16 @@
         </header>
 
         <div class="flex-1 flex flex-col lg:flex-row">
-            <aside id="left-sidebar" class="no-print w-full lg:w-64 glass-panel border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800/90 p-4 flex flex-col justify-between shrink-0">
+            <aside id="left-sidebar" class="no-print w-full lg:w-64 glass-panel border-b lg:border-b-0 lg:border-r p-4 flex flex-col justify-between shrink-0">
                 <div>
-                    <div id="sidebar-menu-heading" class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-2.5 mb-2">
+                    <div id="sidebar-menu-heading" class="text-[10px] font-extrabold uppercase tracking-wider adaptive-sub px-2.5 mb-2">
                         Navigation Menu
                     </div>
                     <nav id="dynamic-sidebar-nav" class="flex lg:flex-col gap-1.5 overflow-x-auto pb-1.5 lg:pb-0"></nav>
                 </div>
 
-                <div class="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800">
-                    <button onclick="logoutUser()" id="btn-logout" class="w-full flex items-center justify-center gap-2 bg-rose-500/10 hover:bg-rose-600 text-rose-400 hover:text-white border border-rose-500/20 px-4 py-2.5 rounded-xl text-xs font-bold transition">
+                <div class="pt-4 mt-4 border-t border-slate-300/40 dark:border-slate-800">
+                    <button onclick="logoutUser()" id="btn-logout" class="super-btn w-full flex items-center justify-center gap-2 bg-rose-500/15 hover:bg-rose-600 text-rose-500 hover:text-white border border-rose-500/25 px-4 py-2.5 rounded-xl text-xs font-bold">
                         🚪 Logout
                     </button>
                 </div>
@@ -160,12 +159,14 @@
         </div>
     </div>
 
-    <!-- सभी मॉड्यूलर JS फ़ाइलें -->
+    <!-- सभी अलग-अलग डेडिकेटेड फ़ाइलें -->
     <script src="landing.js"></script>
     <script src="superanalytics.js"></script>
     <script src="superadmin.js"></script>
     <script src="dashboard.js"></script>
     <script src="fees.js"></script>
+    <script src="library_pro.js"></script>
+    <script src="coaching_pro.js"></script>
     <script src="staff.js"></script>
     <script src="app.js"></script>
 </body>
