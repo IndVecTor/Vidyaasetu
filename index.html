@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VidyaSetu Multiplex ERP | School, College, Coaching & Library</title>
+    <title>VidyaSetu Multiplex ERP | School, College, Coaching, Library & Gym</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -61,12 +61,11 @@
             </div>
 
             <form onsubmit="handleLogin(event)" class="space-y-4">
-                <!-- Role-Wise Login Dropdown (सुपर एडमिन मोड में छिपा रहेगा, संस्थान URL पर दिखेगा) -->
                 <div id="login-role-selector-box">
                     <label id="lbl-login-role" class="block text-xs font-bold adaptive-sub mb-1.5">Select Login Role (पद / भूमिका चुनें)</label>
                     <select id="login-role-select" onchange="updateRoleHint()" class="w-full px-4 py-3 rounded-xl border border-indigo-500/40 bg-slate-100 dark:bg-slate-900 text-sm font-extrabold text-indigo-500 dark:text-indigo-300 outline-none">
-                        <option value="admin">🛡️ Institute Master Admin / Principal</option>
-                        <option value="staff">👔 Staff / Teacher / Clerk / Librarian</option>
+                        <option value="admin">🛡️ Institute Master Admin / Owner</option>
+                        <option value="staff">👔 Staff / Trainer / Teacher / Clerk</option>
                     </select>
                 </div>
 
@@ -159,7 +158,7 @@
         </div>
     </div>
 
-    <!-- सभी अलग-अलग डेडिकेटेड फ़ाइलें -->
+    <!-- सभी समर्पित फ़ाइलें -->
     <script src="landing.js"></script>
     <script src="superanalytics.js"></script>
     <script src="superadmin.js"></script>
@@ -167,6 +166,8 @@
     <script src="fees.js"></script>
     <script src="library_pro.js"></script>
     <script src="coaching_pro.js"></script>
+    <script src="gym_pro.js"></script>
+    <script src="complab_pro.js"></script>
     <script src="staff.js"></script>
     <script src="app.js"></script>
 </body>

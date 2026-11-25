@@ -51,6 +51,8 @@ function loadCollegeWorkspaceData(colObj) {
     if (typeof loadCurrentInstituteStaff === 'function') loadCurrentInstituteStaff();
     if (typeof loadLibraryProData === 'function') loadLibraryProData();
     if (typeof loadCoachingProData === 'function') loadCoachingProData();
+    if (typeof loadGymProData === 'function') loadGymProData();
+    if (typeof loadCompLabProData === 'function') loadCompLabProData();
 }
 
 if (collegeSlug) {
@@ -65,7 +67,6 @@ function saveData() {
     localStorage.setItem(storagePrefix + 'notices', JSON.stringify(notices));
 }
 
-// Smooth Scroll Observer (हर टाइल पर स्क्रॉल एनिमेशन लागू करने के लिए)
 function initScrollRevealAnimations() {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -93,8 +94,9 @@ function enterSuperAdminInstituteView(slug) {
     document.getElementById('topbar-logo-box').innerHTML = targetCol.logo ? `<img src="${targetCol.logo}" class="w-full h-full object-cover">` : "🏢";
     document.getElementById('sidebar-user-badge').innerText = "👑 Master Control Mode";
 
-    activeTab = 'dashboard';
-    switchTab('dashboard');
+    const menu = getDynamicMenuItems();
+    activeTab = menu.length > 1 ? menu[1].id : 'dashboard';
+    switchTab(activeTab);
 }
 
 function exitSuperAdminInstituteView() {
@@ -300,22 +302,26 @@ function getDynamicMenuItems() {
     if (loggedUser.type === 'admin' || (loggedUser.type === 'superadmin' && superAdminViewingSlug)) {
         const items = [];
         if (superAdminViewingSlug) items.push({ id: 'exit_inst_view', icon: '🔙', label: isHi ? 'सुपर एडमिन पर लौटें' : 'Back to Super Admin' });
+        if (cp.allowGym) items.push({ id: 'gym_pro', icon: '💪', label: isHi ? 'जिम मेंबर्स व प्लान' : 'Gym & Fitness Pro' });
+        if (cp.allowCompLab) items.push({ id: 'complab_pro', icon: '🖥️', label: isHi ? 'कंप्यूटर लैब PC मैप' : 'Computer Lab PCs' });
+        if (cp.allowLibrary) items.push({ id: 'library_pro', icon: '📖', label: isHi ? 'लाइब्रेरी सीट व शिफ्ट' : 'Library Pro & Shifts' });
+        if (cp.allowCoaching) items.push({ id: 'coaching_pro', icon: '💻', label: isHi ? 'कोचिंग बैच व सर्टिफिकेट' : 'Coaching & Certificates' });
         items.push({ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' });
-        if (cp.allowLibrary || superAdminViewingSlug) items.push({ id: 'library_pro', icon: '📖', label: isHi ? 'लाइब्रेरी सीट व शिफ्ट' : 'Library Pro & Shifts' });
-        if (cp.allowCoaching || superAdminViewingSlug) items.push({ id: 'coaching_pro', icon: '💻', label: isHi ? 'कोचिंग बैच व सर्टिफिकेट' : 'Coaching & Certificates' });
-        if (cp.allowAdmission || superAdminViewingSlug) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र / सदस्य एडमिशन' : 'Students & Members' });
-        if (cp.allowFees || superAdminViewingSlug) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व रसीद डैशबोर्ड' : 'Fees & Receipts' });
-        if (cp.allowPayroll || superAdminViewingSlug) items.push({ id: 'staff', icon: '👔', label: isHi ? 'स्टाफ प्रबंधन (Staff)' : 'Staff Management' });
-        if (cp.allowAccounts || superAdminViewingSlug) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
-        if (cp.allowNotices || superAdminViewingSlug) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
-        if (cp.allowAttendance || superAdminViewingSlug) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
-        if (cp.allowExams || superAdminViewingSlug) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
+        if (cp.allowAdmission) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र / सदस्य एडमिशन' : 'Students & Members' });
+        if (cp.allowFees) items.push({ id: 'fees', icon: '💰', label: isHi ? 'फीस व रसीद डैशबोर्ड' : 'Fees & Receipts' });
+        if (cp.allowPayroll) items.push({ id: 'staff', icon: '👔', label: isHi ? 'स्टाफ / ट्रेनर प्रबंधन' : 'Staff & Trainers' });
+        if (cp.allowAccounts) items.push({ id: 'accounts', icon: '📉', label: isHi ? 'आमदनी व खर्च' : 'Income & Expenses' });
+        if (cp.allowNotices) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
+        if (cp.allowAttendance) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
+        if (cp.allowExams) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
         return items;
     }
 
     const p = loggedUser.powers;
     const items = [];
     if (p.dashboard) items.push({ id: 'dashboard', icon: '📊', label: isHi ? 'मुख्य डैशबोर्ड' : 'Dashboard' });
+    if (cp.allowGym) items.push({ id: 'gym_pro', icon: '💪', label: isHi ? 'जिम मेंबर्स व प्लान' : 'Gym & Fitness Pro' });
+    if (cp.allowCompLab) items.push({ id: 'complab_pro', icon: '🖥️', label: isHi ? 'कंप्यूटर लैब PC मैप' : 'Computer Lab PCs' });
     if (p.library && cp.allowLibrary) items.push({ id: 'library_pro', icon: '📖', label: isHi ? 'लाइब्रेरी सीट व शिफ्ट' : 'Library Pro & Shifts' });
     if (p.students && cp.allowCoaching) items.push({ id: 'coaching_pro', icon: '💻', label: isHi ? 'कोचिंग बैच व सर्टिफिकेट' : 'Coaching & Certificates' });
     if (p.students && cp.allowAdmission) items.push({ id: 'students', icon: '👨‍🎓', label: isHi ? 'छात्र व एडमिशन' : 'Students & Admission' });
@@ -357,6 +363,8 @@ function renderApp() {
     if (activeTab === 'super_colleges') { mainEl.innerHTML = renderSuperAdminColleges(); return; }
     if (activeTab === 'super_leads') { mainEl.innerHTML = renderSubscriptionLeadsInbox(); return; }
     if (activeTab === 'dashboard') { mainEl.innerHTML = renderHighTechDashboard(); return; }
+    if (activeTab === 'gym_pro') { mainEl.innerHTML = renderGymProModule(); return; }
+    if (activeTab === 'complab_pro') { mainEl.innerHTML = renderCompLabProModule(); return; }
     if (activeTab === 'library_pro') { mainEl.innerHTML = renderLibraryProModule(); return; }
     if (activeTab === 'coaching_pro') { mainEl.innerHTML = renderCoachingProModule(); return; }
     if (activeTab === 'fees') { mainEl.innerHTML = renderFeesDashboardModule(); return; }

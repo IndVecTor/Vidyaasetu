@@ -13,7 +13,7 @@ const defaultColleges = [
         adminUser: "admin",
         adminPass: "123",
         active: true,
-        powers: { allowAdmission: true, allowFees: true, allowPayroll: true, allowAccounts: true, allowLibrary: false, allowCoaching: false, allowNotices: true, allowAttendance: true, allowExams: true }
+        powers: { allowAdmission: true, allowFees: true, allowPayroll: true, allowAccounts: true, allowLibrary: false, allowCoaching: false, allowGym: false, allowCompLab: false, allowNotices: true, allowAttendance: true, allowExams: true }
     },
     {
         slug: "gyanlib",
@@ -25,7 +25,19 @@ const defaultColleges = [
         adminUser: "admin",
         adminPass: "123",
         active: true,
-        powers: { allowAdmission: false, allowFees: true, allowPayroll: true, allowAccounts: true, allowLibrary: true, allowCoaching: false, allowNotices: true, allowAttendance: false, allowExams: false }
+        powers: { allowAdmission: false, allowFees: true, allowPayroll: true, allowAccounts: true, allowLibrary: true, allowCoaching: false, allowGym: false, allowCompLab: false, allowNotices: true, allowAttendance: false, allowExams: false }
+    },
+    {
+        slug: "ironfit",
+        name: "IronPulse Gym & Fitness Club",
+        category: "Gym / Fitness Club",
+        city: "Lucknow, UP",
+        logo: "",
+        plan: "Starter Plan (₹3,999/Yr)",
+        adminUser: "admin",
+        adminPass: "123",
+        active: true,
+        powers: { allowAdmission: false, allowFees: false, allowPayroll: true, allowAccounts: true, allowLibrary: false, allowCoaching: false, allowGym: true, allowCompLab: false, allowNotices: true, allowAttendance: false, allowExams: false }
     }
 ];
 
@@ -36,20 +48,23 @@ function saveCollegesDB() {
     localStorage.setItem('vs_colleges_db', JSON.stringify(registeredColleges));
 }
 
-// कैटेगरी चुनते ही उस बिज़नेस के हिसाब से ऑटो-फीचर्स सेट करना
 function autoApplyCategoryFeatures(cat) {
     const isLib = cat.includes('Library');
-    const isCoach = cat.includes('Coaching') || cat.includes('Computer');
+    const isCoach = cat.includes('Coaching');
+    const isComp = cat.includes('Computer');
+    const isGym = cat.includes('Gym');
     const isSchool = cat.includes('School') || cat.includes('College');
 
-    document.getElementById('cp-adm').checked = isSchool || isCoach;
-    document.getElementById('cp-fee').checked = true;
+    document.getElementById('cp-adm').checked = isSchool || isCoach || isComp;
+    document.getElementById('cp-fee').checked = isSchool || isCoach || isComp || isLib;
     document.getElementById('cp-pay').checked = true;
     document.getElementById('cp-acc').checked = true;
     document.getElementById('cp-lib').checked = isLib;
-    document.getElementById('cp-coa').checked = isCoach;
+    document.getElementById('cp-coa').checked = isCoach || isComp;
+    document.getElementById('cp-gym').checked = isGym;
+    document.getElementById('cp-lab').checked = isComp;
     document.getElementById('cp-not').checked = true;
-    document.getElementById('cp-att').checked = isSchool || isCoach;
+    document.getElementById('cp-att').checked = isSchool || isCoach || isComp;
     document.getElementById('cp-exm').checked = isSchool;
 }
 
@@ -70,26 +85,27 @@ function renderSuperAdminColleges() {
 
                 <form onsubmit="saveCollegeProfile(event)" class="space-y-3 text-sm">
                     <div>
-                        <label class="text-[11px] font-bold text-cyan-400">${isHi ? 'संस्थान की कैटेगरी चुनें (Auto-Features) *' : 'Select Business Category *'}</label>
+                        <label class="text-[11px] font-bold text-cyan-400">${isHi ? 'बिज़नेस / संस्थान कैटेगरी चुनें *' : 'Select Business Category *'}</label>
                         <select id="col-category" onchange="autoApplyCategoryFeatures(this.value)" class="w-full mt-1 px-3 py-2.5 rounded-xl border border-slate-700 bg-slate-900 font-bold text-indigo-300">
                             <option value="School / Inter College" ${editCol && editCol.category === 'School / Inter College' ? 'selected' : ''}>🏫 School / Inter College</option>
                             <option value="Degree College / University" ${editCol && editCol.category === 'Degree College / University' ? 'selected' : ''}>🎓 Degree College / University</option>
                             <option value="Self-Study Library" ${editCol && editCol.category === 'Self-Study Library' ? 'selected' : ''}>📖 Self-Study Library</option>
-                            <option value="Coaching / Computer Institute" ${editCol && editCol.category === 'Coaching / Computer Institute' ? 'selected' : ''}>💻 Coaching / Computer Institute</option>
-                            <option value="Custom Academy / Firm" ${editCol && editCol.category === 'Custom Academy / Firm' ? 'selected' : ''}>🏢 Custom Firm / Academy</option>
+                            <option value="Coaching Institute" ${editCol && editCol.category === 'Coaching Institute' ? 'selected' : ''}>📚 Coaching Institute</option>
+                            <option value="Computer Lab / Training Center" ${editCol && editCol.category === 'Computer Lab / Training Center' ? 'selected' : ''}>🖥️ Computer Lab & Training</option>
+                            <option value="Gym / Fitness Club" ${editCol && editCol.category === 'Gym / Fitness Club' ? 'selected' : ''}>💪 Gym / Fitness Club</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="text-[11px] font-bold adaptive-sub">${isHi ? 'संस्थान का नाम *' : 'Institute / Firm Name *'}</label>
-                        <input type="text" id="col-name" required value="${editCol ? editCol.name : ''}" placeholder="e.g. Gyan Ganga Library" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-white">
+                        <label class="text-[11px] font-bold adaptive-sub">${isHi ? 'संस्थान / क्लब का नाम *' : 'Institute / Club Name *'}</label>
+                        <input type="text" id="col-name" required value="${editCol ? editCol.name : ''}" placeholder="e.g. IronPulse Gym & Fitness" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-white">
                     </div>
 
                     <div>
                         <label class="text-[11px] font-bold text-indigo-400">${isHi ? 'कस्टम URL स्लग *' : 'Custom URL Slug *'}</label>
                         <div class="flex items-center mt-1 bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
                             <span class="px-2.5 text-[11px] text-slate-500">?college=</span>
-                            <input type="text" id="col-slug" required value="${editCol ? editCol.slug : ''}" placeholder="gyanlib" ${editCol ? 'readonly' : ''} class="w-full py-2.5 px-2 bg-transparent text-emerald-400 font-bold outline-none">
+                            <input type="text" id="col-slug" required value="${editCol ? editCol.slug : ''}" placeholder="ironfit" ${editCol ? 'readonly' : ''} class="w-full py-2.5 px-2 bg-transparent text-emerald-400 font-bold outline-none">
                         </div>
                     </div>
 
@@ -118,6 +134,8 @@ function renderSuperAdminColleges() {
                         <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-fee" ${!editCol || editCol.powers.allowFees ? 'checked' : ''}> Fees & Slip</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-lib" ${editCol && editCol.powers.allowLibrary ? 'checked' : ''}> 📖 Library Pro</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-coa" ${editCol && editCol.powers.allowCoaching ? 'checked' : ''}> 💻 Coaching Pro</label>
+                        <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-gym" ${editCol && editCol.powers.allowGym ? 'checked' : ''}> 💪 Gym Pro</label>
+                        <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-lab" ${editCol && editCol.powers.allowCompLab ? 'checked' : ''}> 🖥️ Computer Lab</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-pay" ${!editCol || editCol.powers.allowPayroll ? 'checked' : ''}> Staff & Payroll</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-acc" ${!editCol || editCol.powers.allowAccounts ? 'checked' : ''}> Accounts</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-not" ${!editCol || editCol.powers.allowNotices ? 'checked' : ''}> Notices</label>
@@ -203,6 +221,8 @@ function saveCollegeProfile(e) {
                 allowFees: document.getElementById('cp-fee').checked,
                 allowLibrary: document.getElementById('cp-lib').checked,
                 allowCoaching: document.getElementById('cp-coa').checked,
+                allowGym: document.getElementById('cp-gym').checked,
+                allowCompLab: document.getElementById('cp-lab').checked,
                 allowPayroll: document.getElementById('cp-pay').checked,
                 allowAccounts: document.getElementById('cp-acc').checked,
                 allowNotices: document.getElementById('cp-not').checked,
