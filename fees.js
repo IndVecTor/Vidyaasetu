@@ -1,5 +1,5 @@
 // =========================================================================
-// VidyaSetu Dedicated Fees Dashboard, Date-Wise History & Print Slip (fees.js)
+// VidyaSetu Dedicated Fees Dashboard, Date-Wise History & White-Label Slip (fees.js)
 // =========================================================================
 
 let feeSearchQuery = "";
@@ -57,39 +57,39 @@ function renderFeesDashboardModule() {
         <div class="space-y-6">
             <!-- 4 मुख्य वित्तीय कार्ड्स -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="glass-panel p-5 rounded-2xl border border-indigo-500/30">
-                    <div class="text-xs font-bold text-slate-400">${isHi ? 'कुल निर्धारित फीस' : 'Total Expected Fees'}</div>
-                    <div class="text-2xl font-black text-indigo-400 mt-1">₹${totalExpected.toLocaleString('en-IN')}</div>
+                <div class="glass-panel super-tile p-5 rounded-2xl border border-indigo-500/30">
+                    <div class="text-xs font-bold adaptive-sub">${isHi ? 'कुल निर्धारित फीस' : 'Total Expected Fees'}</div>
+                    <div class="text-2xl font-black text-indigo-500 mt-1">₹${totalExpected.toLocaleString('en-IN')}</div>
                 </div>
-                <div class="glass-panel p-5 rounded-2xl border border-emerald-500/30">
-                    <div class="text-xs font-bold text-slate-400">${isHi ? 'कुल जमा फीस (Collected)' : 'Total Collected'}</div>
-                    <div class="text-2xl font-black text-emerald-400 mt-1">₹${totalCollected.toLocaleString('en-IN')}</div>
+                <div class="glass-panel super-tile p-5 rounded-2xl border border-emerald-500/30">
+                    <div class="text-xs font-bold adaptive-sub">${isHi ? 'कुल जमा फीस (Collected)' : 'Total Collected'}</div>
+                    <div class="text-2xl font-black text-emerald-500 mt-1">₹${totalCollected.toLocaleString('en-IN')}</div>
                 </div>
-                <div class="glass-panel p-5 rounded-2xl border border-rose-500/30">
-                    <div class="text-xs font-bold text-slate-400">${isHi ? 'कुल बकाया फीस (Pending)' : 'Total Pending Due'}</div>
-                    <div class="text-2xl font-black text-rose-400 mt-1">₹${totalDue.toLocaleString('en-IN')}</div>
+                <div class="glass-panel super-tile p-5 rounded-2xl border border-rose-500/30">
+                    <div class="text-xs font-bold adaptive-sub">${isHi ? 'कुल बकाया फीस (Pending)' : 'Total Pending Due'}</div>
+                    <div class="text-2xl font-black text-rose-500 mt-1">₹${totalDue.toLocaleString('en-IN')}</div>
                 </div>
-                <div class="glass-panel p-5 rounded-2xl border border-cyan-500/30">
-                    <div class="text-xs font-bold text-slate-400">${isHi ? 'आज की वसूली (Today)' : "Today's Collection"}</div>
-                    <div class="text-2xl font-black text-cyan-400 mt-1">₹${todayCollection.toLocaleString('en-IN')}</div>
+                <div class="glass-panel super-tile p-5 rounded-2xl border border-cyan-500/30">
+                    <div class="text-xs font-bold adaptive-sub">${isHi ? 'आज की वसूली (Today)' : "Today's Collection"}</div>
+                    <div class="text-2xl font-black text-cyan-500 mt-1">₹${todayCollection.toLocaleString('en-IN')}</div>
                 </div>
             </div>
 
             <!-- सर्च, फ़िल्टर और Excel एक्सपोर्ट बार -->
-            <div class="glass-panel p-5 rounded-2xl border border-slate-800">
+            <div class="glass-panel p-5 rounded-3xl">
                 <div class="flex flex-wrap justify-between items-center gap-3 mb-5">
                     <div>
-                        <h3 class="font-extrabold text-xl text-emerald-400">${isHi ? '💰 संपूर्ण फीस लेजर व तारीख-वार संग्रह' : '💰 Complete Fee Ledger & Date-Wise Collection'}</h3>
-                        <p class="text-xs text-slate-400">${isHi ? 'तारीख और भुगतान माध्यम के साथ फीस जमा करें और केवल रसीद प्रिंट करें' : 'Record date-wise installments, view payment history & print clean receipts'}</p>
+                        <h3 class="font-extrabold text-xl text-emerald-500">${isHi ? '💰 संपूर्ण फीस लेजर व तारीख-वार संग्रह' : '💰 Complete Fee Ledger & Date-Wise Collection'}</h3>
+                        <p class="text-xs adaptive-sub">${isHi ? 'तारीख और भुगतान माध्यम के साथ फीस जमा करें और अपने संस्थान के लोगो-मुहर वाली रसीद प्रिंट करें' : 'Record date-wise installments & print receipts with your Institute Logo & Stamp'}</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <input type="text" value="${feeSearchQuery}" oninput="feeSearchQuery=this.value; renderApp()" placeholder="${isHi ? 'नाम या रोल नंबर खोजें...' : 'Search name / roll...'}" class="px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs">
-                        <select onchange="feeFilterStatus=this.value; renderApp()" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs font-bold">
+                        <input type="text" value="${feeSearchQuery}" oninput="feeSearchQuery=this.value; renderApp()" placeholder="${isHi ? 'नाम या रोल नंबर खोजें...' : 'Search name / roll...'}" class="px-3.5 py-2 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent text-xs">
+                        <select onchange="feeFilterStatus=this.value; renderApp()" class="px-3 py-2 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 text-xs font-bold">
                             <option value="ALL" ${feeFilterStatus === 'ALL' ? 'selected' : ''}>${isHi ? 'सभी छात्र (All)' : 'All Students'}</option>
                             <option value="DUE" ${feeFilterStatus === 'DUE' ? 'selected' : ''}>${isHi ? 'केवल बकाया (Due Only)' : 'Pending Due Only'}</option>
                             <option value="PAID" ${feeFilterStatus === 'PAID' ? 'selected' : ''}>${isHi ? 'पूरी जमा (Fully Paid)' : 'Fully Paid'}</option>
                         </select>
-                        <button onclick="exportDetailedFeesExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold shadow">
+                        <button onclick="exportDetailedFeesExcel()" class="super-btn bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold shadow">
                             📥 ${isHi ? 'Excel डाउनलोड' : 'Export Excel'}
                         </button>
                     </div>
@@ -99,7 +99,7 @@ function renderFeesDashboardModule() {
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-sm">
                         <thead>
-                            <tr class="border-b border-slate-800 text-slate-400 text-xs">
+                            <tr class="border-b border-slate-300/40 dark:border-slate-800 adaptive-sub text-xs">
                                 <th class="py-3">${isHi ? 'रोल व छात्र' : 'Roll & Student'}</th>
                                 <th class="py-3">${isHi ? 'कुल फीस' : 'Total Fee'}</th>
                                 <th class="py-3">${isHi ? 'जमा (किश्तें)' : 'Paid (Installments)'}</th>
@@ -114,27 +114,27 @@ function renderFeesDashboardModule() {
                                 const due = Math.max(0, s.totalFee - s.paidFee);
                                 const lastTx = s.feeHistory && s.feeHistory.length > 0 ? s.feeHistory[0] : null;
                                 return `
-                                    <tr class="border-b border-slate-800/60 hover:bg-slate-900/40">
+                                    <tr class="border-b border-slate-300/30 dark:border-slate-800/60 hover:bg-indigo-500/5 transition">
                                         <td class="py-3.5">
-                                            <div class="font-bold">${s.roll} • ${s.name}</div>
-                                            <div class="text-xs text-slate-400">${s.class} | ${isHi ? 'पिता:' : 'Father:'} ${s.father}</div>
+                                            <div class="font-bold adaptive-title">${s.roll} • ${s.name}</div>
+                                            <div class="text-xs adaptive-sub">${s.class} | ${isHi ? 'पिता:' : 'Father:'} ${s.father}</div>
                                         </td>
-                                        <td class="py-3.5 font-semibold">₹${Number(s.totalFee).toLocaleString('en-IN')}</td>
+                                        <td class="py-3.5 font-semibold adaptive-title">₹${Number(s.totalFee).toLocaleString('en-IN')}</td>
                                         <td class="py-3.5">
-                                            <span class="font-extrabold text-emerald-400">₹${Number(s.paidFee).toLocaleString('en-IN')}</span>
-                                            <span class="text-[11px] text-slate-400 block">(${s.feeHistory.length} ${isHi ? 'किश्त' : 'txns'})</span>
+                                            <span class="font-extrabold text-emerald-500">₹${Number(s.paidFee).toLocaleString('en-IN')}</span>
+                                            <span class="text-[11px] adaptive-sub block">(${s.feeHistory.length} ${isHi ? 'किश्त' : 'txns'})</span>
                                         </td>
                                         <td class="py-3.5">
-                                            ${due > 0 ? `<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-500/20 text-rose-400">₹${due.toLocaleString('en-IN')}</span>` : `<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-400">✔ Paid</span>`}
+                                            ${due > 0 ? `<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-rose-500/20 text-rose-500">₹${due.toLocaleString('en-IN')}</span>` : `<span class="px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-500">✔ Paid</span>`}
                                         </td>
-                                        <td class="py-3.5 text-xs text-slate-300">
-                                            ${lastTx ? `<div>📅 ${lastTx.date}</div><div class="text-[11px] text-indigo-400">₹${lastTx.amount} (${lastTx.mode})</div>` : '—'}
+                                        <td class="py-3.5 text-xs adaptive-sub">
+                                            ${lastTx ? `<div class="font-semibold adaptive-title">📅 ${lastTx.date}</div><div class="text-[11px] text-indigo-400">₹${lastTx.amount} (${lastTx.mode})</div>` : '—'}
                                         </td>
                                         <td class="py-3.5 flex flex-wrap gap-1.5">
-                                            ${due > 0 ? `<button onclick="openCollectFeeModal(${realIdx})" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow">+ ${isHi ? 'जमा करें' : 'Collect'}</button>` : ''}
-                                            <button onclick="openFeeHistoryModal(${realIdx})" class="bg-slate-800 hover:bg-slate-700 text-cyan-300 px-2.5 py-1.5 rounded-lg text-xs font-bold">📜 ${isHi ? 'हिस्ट्री' : 'History'}</button>
-                                            <button onclick="printDedicatedReceipt(${realIdx}, 0)" class="bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold">🧾 ${isHi ? 'रसीद' : 'Slip'}</button>
-                                            ${due > 0 ? `<button onclick="sendWhatsAppReminder(${realIdx})" class="bg-green-600 hover:bg-green-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold">💬</button>` : ''}
+                                            ${due > 0 ? `<button onclick="openCollectFeeModal(${realIdx})" class="super-btn bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow">+ ${isHi ? 'जमा करें' : 'Collect'}</button>` : ''}
+                                            <button onclick="openFeeHistoryModal(${realIdx})" class="super-btn bg-slate-500/20 hover:bg-slate-500/30 text-cyan-500 px-2.5 py-1.5 rounded-lg text-xs font-bold">📜 ${isHi ? 'हिस्ट्री' : 'History'}</button>
+                                            <button onclick="printDedicatedReceipt(${realIdx}, 0)" class="super-btn bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold">🧾 ${isHi ? 'रसीद' : 'Slip'}</button>
+                                            ${due > 0 ? `<button onclick="sendWhatsAppReminder(${realIdx})" class="super-btn bg-green-600 hover:bg-green-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold">💬</button>` : ''}
                                         </td>
                                     </tr>
                                 `;
@@ -158,31 +158,31 @@ function openCollectFeeModal(idx) {
     const todayStr = new Date().toISOString().split('T')[0];
 
     document.getElementById('fee-modal-area').innerHTML = `
-        <div class="glass-panel p-6 rounded-2xl border-2 border-emerald-500/60 max-w-lg mx-auto shadow-2xl tab-transition">
+        <div class="glass-panel p-6 rounded-3xl border-2 border-emerald-500/60 max-w-lg mx-auto shadow-2xl tab-transition">
             <div class="flex justify-between items-center mb-4">
-                <h3 class="font-extrabold text-lg text-emerald-400">💰 ${isHi ? 'फीस जमा करें' : 'Collect Fee Installment'}</h3>
+                <h3 class="font-extrabold text-lg text-emerald-500">💰 ${isHi ? 'फीस जमा करें' : 'Collect Fee Installment'}</h3>
                 <button onclick="document.getElementById('fee-modal-area').innerHTML=''" class="text-xs text-rose-400 underline">Close</button>
             </div>
-            <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs mb-4 flex justify-between">
-                <span><strong>${s.name}</strong> (${s.class} • Roll ${s.roll})</span>
-                <span class="text-rose-400 font-bold">${isHi ? 'कुल बकाया:' : 'Due:'} ₹${due.toLocaleString('en-IN')}</span>
+            <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs mb-4 flex justify-between">
+                <span class="adaptive-title"><strong>${s.name}</strong> (${s.class} • Roll ${s.roll})</span>
+                <span class="text-rose-500 font-bold">${isHi ? 'कुल बकाया:' : 'Due:'} ₹${due.toLocaleString('en-IN')}</span>
             </div>
 
             <form onsubmit="submitNewFeeInstallment(event, ${idx})" class="space-y-3 text-sm">
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-xs font-bold text-slate-400">${isHi ? 'जमा राशि (₹) *' : 'Amount Paying (₹) *'}</label>
-                        <input type="number" id="fee-pay-amt" required min="1" max="${due}" value="${due}" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 font-extrabold text-emerald-400">
+                        <label class="text-xs font-bold adaptive-sub">${isHi ? 'जमा राशि (₹) *' : 'Amount Paying (₹) *'}</label>
+                        <input type="number" id="fee-pay-amt" required min="1" max="${due}" value="${due}" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent font-extrabold text-emerald-500">
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-slate-400">${isHi ? 'भुगतान की तारीख *' : 'Payment Date *'}</label>
-                        <input type="date" id="fee-pay-date" required value="${todayStr}" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 font-bold">
+                        <label class="text-xs font-bold adaptive-sub">${isHi ? 'भुगतान की तारीख *' : 'Payment Date *'}</label>
+                        <input type="date" id="fee-pay-date" required value="${todayStr}" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent font-bold">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="text-xs font-bold text-slate-400">${isHi ? 'भुगतान का माध्यम' : 'Payment Mode'}</label>
-                        <select id="fee-pay-mode" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 font-bold">
+                        <label class="text-xs font-bold adaptive-sub">${isHi ? 'भुगतान का माध्यम' : 'Payment Mode'}</label>
+                        <select id="fee-pay-mode" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-slate-100 dark:bg-slate-900 font-bold">
                             <option value="Cash">💵 Cash (नकद)</option>
                             <option value="UPI / QR">📱 UPI / PhonePe / GPay</option>
                             <option value="Bank Transfer">🏦 Bank Transfer / NEFT</option>
@@ -190,11 +190,11 @@ function openCollectFeeModal(idx) {
                         </select>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-slate-400">${isHi ? 'टिप्पणी (Remark)' : 'Installment Note'}</label>
-                        <input type="text" id="fee-pay-remark" placeholder="e.g. 2nd Installment" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900">
+                        <label class="text-xs font-bold adaptive-sub">${isHi ? 'टिप्पणी (Remark)' : 'Installment Note'}</label>
+                        <input type="text" id="fee-pay-remark" placeholder="e.g. 2nd Installment" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
                     </div>
                 </div>
-                <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold py-3 rounded-xl shadow-lg">
+                <button type="submit" class="super-btn w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold py-3 rounded-xl shadow-lg">
                     ✅ ${isHi ? 'फीस सेव करें और रसीद देखें' : 'Save Payment & Generate Slip'}
                 </button>
             </form>
@@ -235,25 +235,25 @@ function openFeeHistoryModal(idx) {
     const isHi = currentLang === 'hi';
 
     document.getElementById('fee-modal-area').innerHTML = `
-        <div class="glass-panel p-6 rounded-2xl border border-cyan-500/40 max-w-2xl mx-auto shadow-2xl tab-transition">
+        <div class="glass-panel p-6 rounded-3xl border border-cyan-500/40 max-w-2xl mx-auto shadow-2xl tab-transition">
             <div class="flex justify-between items-center mb-4">
                 <div>
-                    <h3 class="font-extrabold text-lg text-cyan-400">📜 ${s.name} — ${isHi ? 'तारीख-वार फीस इतिहास' : 'Date-Wise Fee Payment History'}</h3>
-                    <p class="text-xs text-slate-400">${s.class} | Roll: ${s.roll} | Total: ₹${s.totalFee} | Paid: ₹${s.paidFee}</p>
+                    <h3 class="font-extrabold text-lg text-cyan-500">📜 ${s.name} — ${isHi ? 'तारीख-वार फीस इतिहास' : 'Date-Wise Fee Payment History'}</h3>
+                    <p class="text-xs adaptive-sub">${s.class} | Roll: ${s.roll} | Total: ₹${s.totalFee} | Paid: ₹${s.paidFee}</p>
                 </div>
                 <button onclick="document.getElementById('fee-modal-area').innerHTML=''" class="text-xs text-rose-400 underline">Close</button>
             </div>
 
             <div class="space-y-2.5">
-                ${s.feeHistory.length === 0 ? `<p class="text-xs text-slate-400">No payments recorded yet.</p>` : s.feeHistory.map((h, txIdx) => `
-                    <div class="p-3.5 rounded-xl bg-slate-900/70 border border-slate-800 flex flex-wrap justify-between items-center gap-2 text-xs">
+                ${s.feeHistory.length === 0 ? `<p class="text-xs adaptive-sub">No payments recorded yet.</p>` : s.feeHistory.map((h, txIdx) => `
+                    <div class="p-3.5 rounded-xl bg-indigo-500/5 border border-indigo-500/20 flex flex-wrap justify-between items-center gap-2 text-xs">
                         <div>
-                            <span class="font-mono text-indigo-400 font-bold">${h.receiptNo}</span> • <span class="text-slate-300 font-bold">📅 ${h.date}</span>
-                            <div class="text-slate-400 mt-0.5">${h.mode} — ${h.remark}</div>
+                            <span class="font-mono text-indigo-400 font-bold">${h.receiptNo}</span> • <span class="adaptive-title font-bold">📅 ${h.date}</span>
+                            <div class="adaptive-sub mt-0.5">${h.mode} — ${h.remark}</div>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="text-base font-extrabold text-emerald-400">₹${Number(h.amount).toLocaleString('en-IN')}</span>
-                            <button onclick="printDedicatedReceipt(${idx}, ${txIdx})" class="bg-indigo-600 text-white px-2.5 py-1 rounded-lg font-bold">🖨️ Slip</button>
+                            <span class="text-base font-extrabold text-emerald-500">₹${Number(h.amount).toLocaleString('en-IN')}</span>
+                            <button onclick="printDedicatedReceipt(${idx}, ${txIdx})" class="super-btn bg-indigo-600 text-white px-2.5 py-1 rounded-lg font-bold">🖨️ Slip</button>
                         </div>
                     </div>
                 `).join('')}
@@ -264,36 +264,23 @@ function openFeeHistoryModal(idx) {
 }
 
 // =========================================================================
-// 4. केवल रसीद प्रिंट करने का समर्पित लेआउट (Print-Only Dedicated Receipt)
+// 4. केवल रसीद प्रिंट करने का समर्पित लेआउट (White-Label Logo & Stamp ke saath)
 // =========================================================================
 function printDedicatedReceipt(stuIdx, txIdx = 0) {
     const s = students[stuIdx];
     ensureStudentFeeHistory(s);
     const tx = s.feeHistory[txIdx] || { receiptNo: "REC-001", date: new Date().toISOString().split('T')[0], amount: s.paidFee, mode: "Cash", remark: "Fee Payment" };
     const due = Math.max(0, s.totalFee - s.paidFee);
-    const cityText = currentCollege ? currentCollege.city : "India";
-    const logoHtml = orgLogo ? `<img src="${orgLogo}" class="w-14 h-14 object-cover rounded-xl border border-slate-300">` : `<div class="w-14 h-14 rounded-xl bg-indigo-900 text-white flex items-center justify-center text-2xl font-bold">🏫</div>`;
 
     const receiptHTML = `
         <div class="bg-white text-slate-900 p-7 rounded-2xl border-2 border-slate-900 max-w-2xl mx-auto shadow-2xl">
-            <!-- रसीद हेडर -->
-            <div class="flex items-center justify-between border-b-2 border-slate-900 pb-4 mb-4">
-                <div class="flex items-center gap-3.5">
-                    ${logoHtml}
-                    <div>
-                        <div class="text-[10px] font-extrabold uppercase tracking-widest text-indigo-700">Official Fee Receipt • VidyaSetu ERP</div>
-                        <h2 class="text-xl font-black uppercase tracking-tight text-slate-900">${orgName}</h2>
-                        <p class="text-xs text-slate-600">${cityText} • Session 2026-27</p>
-                    </div>
-                </div>
-                <div class="text-right text-xs">
-                    <div class="bg-slate-900 text-white px-3 py-1 rounded font-bold uppercase tracking-wider mb-1">FEE RECEIPT</div>
-                    <div><strong>Receipt No:</strong> ${tx.receiptNo}</div>
-                    <div><strong>Date:</strong> ${tx.date}</div>
-                </div>
+            ${getOfficialPrintHeaderHTML("OFFICIAL FEE RECEIPT")}
+
+            <div class="flex justify-between text-xs font-bold mb-3">
+                <span>Receipt No: <strong class="text-indigo-700">${tx.receiptNo}</strong></span>
+                <span>Payment Date: <strong>${tx.date}</strong></span>
             </div>
 
-            <!-- छात्र का विवरण -->
             <div class="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-300 mb-4">
                 <div><strong>Student Name:</strong> ${s.name}</div>
                 <div><strong>Class & Roll No:</strong> ${s.class} (Roll: ${s.roll})</div>
@@ -301,7 +288,6 @@ function printDedicatedReceipt(stuIdx, txIdx = 0) {
                 <div><strong>Payment Mode:</strong> ${tx.mode}</div>
             </div>
 
-            <!-- शुल्क विवरण तालिका -->
             <table class="w-full border border-slate-900 text-xs mb-4">
                 <thead>
                     <tr class="bg-slate-200 border-b border-slate-900">
@@ -331,27 +317,17 @@ function printDedicatedReceipt(stuIdx, txIdx = 0) {
                 </tbody>
             </table>
 
-            <!-- फुटर व हस्ताक्षर -->
-            <div class="flex justify-between items-end mt-8 pt-4 border-t border-dashed border-slate-400 text-[11px] text-slate-600">
-                <div>
-                    <div>* Computer generated valid receipt.</div>
-                    <div>* Fees once paid are non-refundable.</div>
-                </div>
-                <div class="text-center">
-                    <div class="font-bold text-slate-900 border-t border-slate-800 pt-1 px-4">Authorized Cashier / Principal</div>
-                </div>
-            </div>
+            ${getOfficialPrintStampHTML("Depositor / Parent Sign", "Cashier / Principal Sign")}
         </div>
     `;
 
-    // स्क्रीन पर प्रीव्यू दिखाना + असली प्रिंट कंटेनर में भरना
     document.getElementById('print-only-container').innerHTML = receiptHTML;
     document.getElementById('fee-modal-area').innerHTML = `
         <div class="space-y-4 tab-transition">
             ${receiptHTML}
             <div class="no-print text-center flex justify-center gap-3">
-                <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl text-xs font-extrabold shadow-lg">
-                    🖨️ Print Only This Slip / Save PDF
+                <button onclick="window.print()" class="super-btn bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 rounded-xl text-xs font-extrabold shadow-lg">
+                    🖨️ Print Only This Receipt / Save PDF
                 </button>
                 <button onclick="document.getElementById('fee-modal-area').innerHTML=''" class="bg-slate-800 text-slate-300 px-4 py-2.5 rounded-xl text-xs font-bold">
                     Close

@@ -14,12 +14,14 @@ const superAdminCredentials = { username: "superadmin", password: "123", name: "
 const defaultStudents = [
     {
         id: "STU101", name: "Aarav Sharma", father: "Rajesh Sharma", class: "Class 10", roll: "101", mobile: "9876543210",
+        dob: new Date().toISOString().split('T')[0],
         totalFee: 12000, paidFee: 12000, attStatus: "P", attRemark: "On Time", monthlyPercent: 94,
         feeHistory: [{ receiptNo: "REC-48210", date: "2026-11-15", amount: 12000, mode: "UPI / QR", remark: "Annual Fee" }],
         marks: { hindi: 88, english: 84, math: 95, science: 91 }
     },
     {
         id: "STU102", name: "Ananya Verma", father: "Suresh Verma", class: "Class 10", roll: "102", mobile: "9876543211",
+        dob: "2008-05-12",
         totalFee: 12000, paidFee: 8000, attStatus: "L", attRemark: "Medical Leave", monthlyPercent: 88,
         feeHistory: [{ receiptNo: "REC-33910", date: "2026-08-05", amount: 8000, mode: "Cash", remark: "1st Installment" }],
         marks: { hindi: 92, english: 89, math: 78, science: 85 }
@@ -27,7 +29,7 @@ const defaultStudents = [
 ];
 
 const defaultExpenses = [{ id: 1, title: "Electricity & Internet Bill", amount: 3200, date: "10/11/2026" }];
-const defaultNotices = [{ id: 1, title: "Welcome to Digital Campus", body: "All records are now live on VidyaSetu Multiplex ERP.", date: "24/11/2026" }];
+const defaultNotices = [{ id: 1, title: "Welcome to Digital Campus", body: "All academic and administrative records are now live.", date: "24/11/2026" }];
 
 let students = [];
 let expenses = [];
@@ -69,9 +71,7 @@ function saveData() {
 
 function initScrollRevealAnimations() {
     const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) entry.target.classList.add('revealed');
-        });
+        entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('revealed'); });
     }, { threshold: 0.08 });
 
     document.querySelectorAll('.glass-panel, .super-tile').forEach((el, i) => {
@@ -105,7 +105,7 @@ function exitSuperAdminInstituteView() {
     document.getElementById('topbar-org-title').innerText = "VidyaSetu Central Master Control";
     document.getElementById('topbar-cat-pill').innerText = "👑 Multiplex HQ";
     document.getElementById('topbar-city-tag').innerText = "• Global Admin Console";
-    document.getElementById('topbar-logo-box').innerHTML = "👑";
+    document.getElementById('topbar-logo-box').innerHTML = getVidyaSetuSVGLogo(48);
     document.getElementById('sidebar-user-badge').innerText = "● Master Owner";
 
     activeTab = 'super_colleges';
@@ -165,11 +165,12 @@ window.onload = function() {
         updateLoginScreenLanguage();
     } else if (collegeSlug) {
         if (!currentCollege) {
-            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-rose-500">404 • Invalid Institute URL</h1><p class="text-sm adaptive-sub mt-2">This institute link does not exist.</p><a href="?" class="mt-4 bg-indigo-600 text-white px-5 py-2 rounded-xl text-xs font-bold">Go to VidyaSetu Home</a></div>`;
+            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-rose-500">404 • Invalid Institute URL</h1><a href="?" class="mt-4 bg-indigo-600 text-white px-5 py-2 rounded-xl text-xs font-bold">Go to VidyaSetu Home</a></div>`;
             return;
         }
-        if (!currentCollege.active) {
-            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-amber-500">⛔ Subscription Suspended</h1><p class="text-sm adaptive-sub mt-2">Portal for <strong>${currentCollege.name}</strong> is inactive.</p></div>`;
+        const isExpired = currentCollege.expiryDate && new Date(currentCollege.expiryDate) < new Date();
+        if (!currentCollege.active || isExpired) {
+            document.body.innerHTML = `<div class="min-h-screen flex flex-col justify-center items-center p-6 text-center"><h1 class="text-3xl font-extrabold text-rose-500">⛔ Subscription Expired / Suspended</h1><p class="text-sm adaptive-sub mt-2">The subscription for <strong>${currentCollege.name}</strong> has expired (${currentCollege.expiryDate || ''}). Contact VidyaSetu Support (+91 8574210020) for renewal.</p></div>`;
             return;
         }
         document.getElementById('login-screen').classList.remove('hidden');
@@ -184,13 +185,14 @@ window.onload = function() {
 
 function updateRoleHint() {
     if (!currentCollege) return;
-    const isHi = currentLang === 'hi';
     const roleVal = document.getElementById('login-role-select').value;
     const hintEl = document.getElementById('demo-credentials-hint');
     if (roleVal === 'admin') {
-        hintEl.innerHTML = isHi ? `एडमिन ID: <strong class="text-indigo-400">${currentCollege.adminUser}</strong> | पासवर्ड: <strong class="text-indigo-400">${currentCollege.adminPass}</strong>` : `Master Admin ID: <strong class="text-indigo-400">${currentCollege.adminUser}</strong> | Password: <strong class="text-indigo-400">${currentCollege.adminPass}</strong>`;
+        hintEl.innerHTML = `Admin ID: <strong class="text-indigo-400">${currentCollege.adminUser}</strong> | Password: <strong class="text-indigo-400">${currentCollege.adminPass}</strong>`;
+    } else if (roleVal === 'staff') {
+        hintEl.innerHTML = `Staff Demo: <strong class="text-emerald-400">clerk1</strong> or <strong class="text-emerald-400">teacher1</strong> (Pass: 123)`;
     } else {
-        hintEl.innerHTML = isHi ? `स्टाफ डेमो ID: <strong class="text-emerald-400">clerk1</strong> या <strong class="text-emerald-400">teacher1</strong> (पासवर्ड: 123)` : `Staff Demo ID: <strong class="text-emerald-400">clerk1</strong> or <strong class="text-emerald-400">teacher1</strong> (Pass: 123)`;
+        hintEl.innerHTML = `Student / Member Login: Roll No. <strong class="text-cyan-400">101</strong> | Mobile: <strong class="text-cyan-400">9876543210</strong>`;
     }
 }
 
@@ -202,20 +204,18 @@ function updateLoginScreenLanguage() {
     const hintEl = document.getElementById('demo-credentials-hint');
     const btnEl = document.getElementById('login-submit-btn');
 
-    document.getElementById('lbl-username').innerText = isHi ? 'यूज़रनेम (Username)' : 'Username';
-    document.getElementById('lbl-password').innerText = isHi ? 'पासवर्ड (Password)' : 'Password';
     btnEl.innerText = isHi ? '🔐 सुरक्षित लॉगिन करें' : '🔐 Secure Login';
 
     if (portalMode === 'superadmin') {
         titleEl.innerText = isHi ? "👑 विद्यासेतु मास्टर कंट्रोल पैनल" : "👑 VidyaSetu Master Control Panel";
-        subEl.innerText = isHi ? "केवल सिस्टम मालिक के लिए प्रतिबंधित प्रवेश" : "Restricted Access • System Owner Only";
-        logoEl.innerHTML = "👑";
+        subEl.innerText = "Restricted Access • System Owner Only";
+        logoEl.innerHTML = getVidyaSetuSVGLogo(64);
         btnEl.className = "super-btn w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-3 rounded-xl shadow-lg";
         hintEl.innerHTML = `Username: <strong class="text-purple-400">superadmin</strong> | Password: <strong class="text-purple-400">123</strong>`;
     } else if (currentCollege) {
         document.getElementById('login-category-badge').innerText = currentCollege.category || "VidyaSetu Institute";
         titleEl.innerText = currentCollege.name;
-        subEl.innerText = isHi ? "अपना पद (Role) चुनें और लॉगिन करें" : "Choose your role from dropdown and sign in";
+        subEl.innerText = isHi ? "अपना पद (Role) चुनें और लॉगिन करें" : "Choose your role and sign in";
         logoEl.innerHTML = currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏢";
         updateRoleHint();
     }
@@ -229,7 +229,6 @@ function updateSidebarStaticText() {
 
 function handleLogin(e) {
     e.preventDefault();
-    const isHi = currentLang === 'hi';
     const u = document.getElementById('login-username').value.trim();
     const p = document.getElementById('login-password').value.trim();
     const errBox = document.getElementById('login-error');
@@ -252,9 +251,15 @@ function handleLogin(e) {
                 loggedUser = { type: 'user', name: foundStaff.name, roleLabel: foundStaff.role || "Staff", powers: foundStaff.powers || {} };
                 errBox.classList.add('hidden'); openDashboard(); return;
             }
+        } else if (selectedRole === 'student') {
+            const foundStu = students.find(s => s.roll.toLowerCase() === u.toLowerCase() && s.mobile.includes(p));
+            if (foundStu) {
+                loggedUser = { type: 'student', studentData: foundStu, name: foundStu.name, roleLabel: `Student (${foundStu.class})` };
+                errBox.classList.add('hidden'); openDashboard(); return;
+            }
         }
     }
-    errBox.innerText = isHi ? "❌ चुने गए पद के लिए गलत यूज़रनेम या पासवर्ड!" : "❌ Invalid Username or Password for selected Role!";
+    errBox.innerText = "❌ Invalid Credentials for selected Role!";
     errBox.classList.remove('hidden');
 }
 
@@ -265,10 +270,24 @@ function openDashboard() {
     document.getElementById('topbar-org-title').innerText = loggedUser.type === 'superadmin' ? "VidyaSetu Central Master Control" : currentCollege.name;
     document.getElementById('topbar-cat-pill').innerText = loggedUser.type === 'superadmin' ? "👑 Multiplex HQ" : `🏢 ${currentCollege.category || 'Institute'}`;
     document.getElementById('topbar-city-tag').innerText = loggedUser.type === 'superadmin' ? "• Global Admin Console" : `• ${currentCollege.city} • Session 2026-27`;
-    document.getElementById('topbar-logo-box').innerHTML = loggedUser.type === 'superadmin' ? "👑" : (currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏢");
+    document.getElementById('topbar-logo-box').innerHTML = loggedUser.type === 'superadmin' ? getVidyaSetuSVGLogo(56) : (currentCollege.logo ? `<img src="${currentCollege.logo}" class="w-full h-full object-cover">` : "🏢");
     
     document.getElementById('sidebar-user-badge').innerText = `● ${loggedUser.roleLabel}`;
     document.getElementById('logged-user-name').innerText = loggedUser.name;
+
+    // Expiry Warning Banner Check
+    const warnBanner = document.getElementById('expiry-warning-banner');
+    if (currentCollege && currentCollege.expiryDate && loggedUser.type !== 'superadmin') {
+        const daysLeft = Math.ceil((new Date(currentCollege.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+        if (daysLeft <= 15 && daysLeft >= 0) {
+            warnBanner.innerText = `⚠️ Subscription Renewal Alert: Your VidyaSetu portal expires in ${daysLeft} days (${currentCollege.expiryDate}). Contact Admin to renew.`;
+            warnBanner.classList.remove('hidden');
+        } else {
+            warnBanner.classList.add('hidden');
+        }
+    } else {
+        warnBanner.classList.add('hidden');
+    }
 
     syncAnimatedSwitches();
     updateSidebarStaticText();
@@ -289,6 +308,10 @@ function logoutUser() {
 function getDynamicMenuItems() {
     if (!loggedUser) return [];
     const isHi = currentLang === 'hi';
+
+    if (loggedUser.type === 'student') {
+        return [{ id: 'student_portal', icon: '🎓', label: isHi ? 'मेरा डैशबोर्ड व रसीद' : 'My Portal & Receipts' }];
+    }
 
     if (loggedUser.type === 'superadmin' && !superAdminViewingSlug) {
         return [
@@ -314,6 +337,8 @@ function getDynamicMenuItems() {
         if (cp.allowNotices) items.push({ id: 'notices', icon: '📢', label: isHi ? 'नोटिस बोर्ड' : 'Notice Board' });
         if (cp.allowAttendance) items.push({ id: 'attendance', icon: '✅', label: isHi ? 'स्मार्ट हाज़िरी' : 'Smart Attendance' });
         if (cp.allowExams) items.push({ id: 'exams', icon: '📝', label: isHi ? 'मार्कशीट व ID कार्ड' : 'Exams & ID Cards' });
+        if (cp.allowExams || cp.allowAdmission) items.push({ id: 'certificates', icon: '📜', label: isHi ? 'TC व प्रवेश पत्र (Admit Card)' : 'TC & Admit Cards' });
+        items.push({ id: 'branding', icon: '🎨', label: isHi ? 'लोगो, मुहर व बैकअप' : 'Logo, Stamp & Backup' });
         return items;
     }
 
@@ -359,10 +384,13 @@ function renderApp() {
         </button>
     `).join('');
 
+    if (activeTab === 'student_portal') { mainEl.innerHTML = renderStudentSelfPortal(); return; }
     if (activeTab === 'super_analytics') { mainEl.innerHTML = renderSuperAnalyticsDashboard(); return; }
     if (activeTab === 'super_colleges') { mainEl.innerHTML = renderSuperAdminColleges(); return; }
     if (activeTab === 'super_leads') { mainEl.innerHTML = renderSubscriptionLeadsInbox(); return; }
-    if (activeTab === 'dashboard') { mainEl.innerHTML = renderHighTechDashboard(); return; }
+    if (activeTab === 'branding') { mainEl.innerHTML = renderInstituteBrandingModule(); return; }
+    if (activeTab === 'certificates') { mainEl.innerHTML = renderCertificatesModule(); return; }
+    if (activeTab === 'dashboard') { mainEl.innerHTML = renderDashboardWithBirthdays(); return; }
     if (activeTab === 'gym_pro') { mainEl.innerHTML = renderGymProModule(); return; }
     if (activeTab === 'complab_pro') { mainEl.innerHTML = renderCompLabProModule(); return; }
     if (activeTab === 'library_pro') { mainEl.innerHTML = renderLibraryProModule(); return; }
@@ -425,7 +453,10 @@ function renderApp() {
                             <input type="number" id="stu-total-fee" required value="12000" placeholder="Total Fee" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
                             <input type="number" id="stu-paid-fee" required value="5000" placeholder="Initial Paid" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
                         </div>
-                        <input type="text" id="stu-mobile" placeholder="WhatsApp No." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="stu-mobile" placeholder="WhatsApp No." class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
+                            <input type="date" id="stu-dob" title="Date of Birth" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent">
+                        </div>
                         <button type="submit" class="super-btn w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl">✅ Save Admission</button>
                     </form>
                 </div>
@@ -481,9 +512,20 @@ function renderApp() {
                 <form onsubmit="addNotice(event)" class="space-y-2">
                     <input type="text" id="not-title" required placeholder="Notice Title *" class="w-full px-3 py-2 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent text-sm">
                     <textarea id="not-body" rows="2" required placeholder="Details *" class="w-full px-3 py-2 rounded-xl border border-slate-400/40 dark:border-slate-700 bg-transparent text-sm"></textarea>
-                    <button type="submit" class="super-btn bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold">🚀 Publish</button>
+                    <button type="submit" class="super-btn bg-amber-600 text-white px-4 py-2 rounded-xl text-xs font-bold">🚀 Publish Notice</button>
                 </form>
-                ${notices.map((n, idx) => `<div class="super-tile p-3 rounded-xl border-l-4 border-indigo-500 flex justify-between"><div><div class="font-bold text-sm adaptive-title">${n.title}</div><p class="text-xs adaptive-sub">${n.body}</p></div><button onclick="notices.splice(${idx},1); saveData(); renderApp()" class="text-xs text-rose-500">🗑️</button></div>`).join('')}
+                ${notices.map((n, idx) => `
+                    <div class="super-tile p-4 rounded-2xl border-l-4 border-indigo-500 flex flex-wrap justify-between items-center gap-2">
+                        <div>
+                            <div class="font-bold text-sm adaptive-title">${n.title}</div>
+                            <p class="text-xs adaptive-sub">${n.body}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="https://wa.me/?text=${encodeURIComponent(`📢 *Notice from ${orgName}*\n*${n.title}*\n${n.body}`)}" target="_blank" class="super-btn bg-emerald-600 text-white px-3 py-1 rounded-lg text-xs font-bold">💬 Share on WhatsApp</a>
+                            <button onclick="notices.splice(${idx},1); saveData(); renderApp()" class="text-xs text-rose-500">🗑️</button>
+                        </div>
+                    </div>
+                `).join('')}
             </div>
         `;
     }
@@ -508,7 +550,71 @@ function renderApp() {
     mainEl.innerHTML = html;
 }
 
-// Helper Functions
+// Dashboard + Today's Birthday Wishes Card
+function renderDashboardWithBirthdays() {
+    const baseDash = typeof renderHighTechDashboard === 'function' ? renderHighTechDashboard() : '';
+    const todayMD = new Date().toISOString().slice(5, 10);
+    const bdayList = students.filter(s => s.dob && s.dob.slice(5, 10) === todayMD);
+
+    if (bdayList.length === 0) return baseDash;
+
+    const bdayHtml = `
+        <div class="glass-panel super-tile p-5 rounded-3xl border-2 border-pink-500/40 mb-6 flex flex-wrap justify-between items-center gap-4">
+            <div>
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-pink-400">🎂 Today's Campus Birthday Celebration</span>
+                <h3 class="font-extrabold text-base adaptive-title mt-0.5">Happy Birthday to ${bdayList.map(b => b.name).join(', ')}!</h3>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                ${bdayList.map(b => `
+                    <a href="https://wa.me/91${b.mobile.replace(/\D/g,'')}?text=${encodeURIComponent(`🎂 Happy Birthday *${b.name}*! Wishing you a bright future from *${orgName}*!`)}" target="_blank" class="super-btn bg-pink-600 text-white px-3.5 py-2 rounded-xl text-xs font-bold">
+                        🎉 Wish ${b.name} on WhatsApp
+                    </a>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    return bdayHtml + baseDash;
+}
+
+// Student / Member Self-Service Portal
+function renderStudentSelfPortal() {
+    const s = loggedUser.studentData;
+    const due = Math.max(0, s.totalFee - s.paidFee);
+    const stuIdx = students.findIndex(x => x.id === s.id);
+
+    return `
+        <div class="space-y-6">
+            <div class="glass-panel p-6 rounded-3xl border border-indigo-500/30">
+                <span class="text-xs font-bold text-indigo-400">🎓 Student Self-Service Portal</span>
+                <h2 class="text-2xl font-black adaptive-title mt-1">Welcome, ${s.name}</h2>
+                <p class="text-xs adaptive-sub">Class: ${s.class} | Roll No: ${s.roll} | Father: ${s.father}</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5">
+                    <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
+                        <span class="text-xs adaptive-sub">Paid Fees</span>
+                        <div class="text-2xl font-black text-emerald-500">₹${s.paidFee}</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30">
+                        <span class="text-xs adaptive-sub">Balance Due</span>
+                        <div class="text-2xl font-black text-rose-500">₹${due}</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/30">
+                        <span class="text-xs adaptive-sub">Attendance</span>
+                        <div class="text-2xl font-black text-cyan-500">${s.monthlyPercent || 92}%</div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <button onclick="viewMarksheet(${stuIdx})" class="super-btn bg-amber-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold">📄 Download Marksheet</button>
+                    <button onclick="viewIDCard(${stuIdx})" class="super-btn bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold">🪪 Download ID Card</button>
+                </div>
+            </div>
+            <div id="modal-area"></div>
+        </div>
+    `;
+}
+
+// Helper Functions with Dynamic Institute Logo & Stamp
 function addNewStudent(e) {
     e.preventDefault();
     const initPaid = Number(document.getElementById('stu-paid-fee').value);
@@ -520,6 +626,7 @@ function addNewStudent(e) {
         class: document.getElementById('stu-class').value,
         roll: document.getElementById('stu-roll').value,
         mobile: document.getElementById('stu-mobile').value || "9800000000",
+        dob: document.getElementById('stu-dob').value || "",
         totalFee: Number(document.getElementById('stu-total-fee').value),
         paidFee: initPaid,
         feeHistory: initPaid > 0 ? [{ receiptNo: "REC-" + Math.floor(10000 + Math.random() * 90000), date: todayStr, amount: initPaid, mode: "Cash", remark: "Admission Fee" }] : [],
@@ -537,16 +644,40 @@ function addNotice(e) { e.preventDefault(); notices.unshift({ id: Date.now(), ti
 function viewMarksheet(idx) {
     const s = students[idx];
     const t = s.marks.hindi + s.marks.english + s.marks.math + s.marks.science;
-    const html = `<div class="bg-white text-slate-900 p-6 rounded-2xl border-2 border-amber-700 max-w-xl mx-auto"><h2 class="text-xl font-bold text-center border-b pb-2 mb-3">${orgName} — Report Card</h2><p class="text-sm"><strong>Student:</strong> ${s.name} (${s.class}) | <strong>Total:</strong> ${t} / 400</p></div>`;
+    const html = `
+        <div class="bg-white text-slate-900 p-7 rounded-2xl border-2 border-slate-900 max-w-xl mx-auto shadow-2xl">
+            ${getOfficialPrintHeaderHTML("PROGRESS REPORT CARD")}
+            <p class="text-xs mb-3"><strong>Student:</strong> ${s.name} (${s.class}) | <strong>Roll:</strong> ${s.roll} | <strong>Father:</strong> ${s.father}</p>
+            <table class="w-full border border-slate-900 text-xs mb-4">
+                <tr class="bg-slate-100 border-b border-slate-900"><th class="p-2 text-left">Subject</th><th class="p-2 text-right">Marks</th></tr>
+                <tr class="border-b"><td class="p-2">Hindi</td><td class="p-2 text-right font-bold">${s.marks.hindi} / 100</td></tr>
+                <tr class="border-b"><td class="p-2">English</td><td class="p-2 text-right font-bold">${s.marks.english} / 100</td></tr>
+                <tr class="border-b"><td class="p-2">Mathematics</td><td class="p-2 text-right font-bold">${s.marks.math} / 100</td></tr>
+                <tr class="border-b"><td class="p-2">Science</td><td class="p-2 text-right font-bold">${s.marks.science} / 100</td></tr>
+                <tr class="bg-amber-50 font-extrabold text-sm"><td class="p-2">Grand Total</td><td class="p-2 text-right">${t} / 400 (${(t/4).toFixed(1)}%)</td></tr>
+            </table>
+            ${getOfficialPrintStampHTML("Class Teacher", "Principal / Controller Sign")}
+        </div>
+    `;
     document.getElementById('print-only-container').innerHTML = html;
-    document.getElementById('modal-area').innerHTML = `${html}<div class="no-print text-center mt-3"><button onclick="window.print()" class="super-btn bg-amber-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print Only Marksheet</button></div>`;
+    document.getElementById('modal-area').innerHTML = `${html}<div class="no-print text-center mt-3"><button onclick="window.print()" class="super-btn bg-amber-600 text-white px-5 py-2 rounded-xl text-xs font-bold">🖨️ Print Only Marksheet</button></div>`;
 }
 
 function viewIDCard(idx) {
     const s = students[idx];
-    const html = `<div class="bg-white text-slate-900 p-5 rounded-2xl border-2 border-indigo-600 max-w-xs mx-auto text-center"><h3 class="font-bold text-indigo-700">${orgName}</h3><div class="text-lg font-bold mt-2">${s.name}</div><div class="text-xs">${s.class} | Roll: ${s.roll}</div></div>`;
+    const logoHtml = orgLogo ? `<img src="${orgLogo}" class="w-12 h-12 rounded-xl mx-auto object-cover mb-1 border">` : '';
+    const html = `
+        <div class="bg-white text-slate-900 p-5 rounded-2xl border-2 border-indigo-700 max-w-xs mx-auto text-center shadow-xl">
+            ${logoHtml}
+            <h3 class="font-black text-sm uppercase text-indigo-800">${orgName}</h3>
+            <div class="text-[10px] text-slate-500 mb-2">Official Identity Card • 2026-27</div>
+            <div class="text-lg font-extrabold text-slate-900">${s.name}</div>
+            <div class="text-xs font-bold text-indigo-600">${s.class} • Roll: ${s.roll}</div>
+            <div class="text-[11px] text-slate-600 mt-2">Father: ${s.father}<br>Contact: ${s.mobile}</div>
+        </div>
+    `;
     document.getElementById('print-only-container').innerHTML = html;
-    document.getElementById('modal-area').innerHTML = `${html}<div class="no-print text-center mt-3"><button onclick="window.print()" class="super-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold">🖨️ Print Only ID Card</button></div>`;
+    document.getElementById('modal-area').innerHTML = `${html}<div class="no-print text-center mt-3"><button onclick="window.print()" class="super-btn bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold">🖨️ Print Only ID Card</button></div>`;
 }
 
 function exportCSV() {

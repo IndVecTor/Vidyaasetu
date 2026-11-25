@@ -1,5 +1,5 @@
 // =========================================================================
-// VidyaSetu Super Admin: Multiplex Category Builder & Deep View (superadmin.js)
+// VidyaSetu Super Admin: Multiplex Builder + Expiry Date Lock (superadmin.js)
 // =========================================================================
 
 const defaultColleges = [
@@ -8,8 +8,12 @@ const defaultColleges = [
         name: "Adarsh Vidya Mandir Inter College",
         category: "School / Inter College",
         city: "Azamgarh, UP",
+        tagline: "Affiliated to UP Board • Excellence in Education",
+        phone: "9876543210",
         logo: "",
+        stamp: "",
         plan: "Pro Campus (₹6,999/Yr)",
+        expiryDate: "2027-11-30",
         adminUser: "admin",
         adminPass: "123",
         active: true,
@@ -20,8 +24,12 @@ const defaultColleges = [
         name: "Gyan Ganga Digital Self-Study Library",
         category: "Self-Study Library",
         city: "Azamgarh, UP",
+        tagline: "Peaceful AC Study Environment • 24x7 Wi-Fi",
+        phone: "9876543211",
         logo: "",
+        stamp: "",
         plan: "Starter Plan (₹3,999/Yr)",
+        expiryDate: "2027-10-15",
         adminUser: "admin",
         adminPass: "123",
         active: true,
@@ -32,8 +40,12 @@ const defaultColleges = [
         name: "IronPulse Gym & Fitness Club",
         category: "Gym / Fitness Club",
         city: "Lucknow, UP",
+        tagline: "Transform Your Body • Certified Trainers",
+        phone: "9876543212",
         logo: "",
+        stamp: "",
         plan: "Starter Plan (₹3,999/Yr)",
+        expiryDate: "2027-09-20",
         adminUser: "admin",
         adminPass: "123",
         active: true,
@@ -78,14 +90,14 @@ function renderSuperAdminColleges() {
             <div class="glass-panel p-6 rounded-3xl border ${editCol ? 'border-amber-500/50' : 'border-purple-500/40'} h-fit">
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="font-extrabold text-lg ${editCol ? 'text-amber-400' : 'text-purple-400'}">
-                        ${editCol ? (isHi ? '✏️ संस्थान एडिट करें' : '✏️ Edit Institute') : (isHi ? '🏢 नई कैटेगरी व संस्थान बनाएं' : '🏢 Create Multiplex Institute')}
+                        ${editCol ? '✏️ Edit Institute & Expiry' : '🏢 Create Multiplex Institute'}
                     </h3>
                     ${editCol ? `<button onclick="editingCollegeIdx=null; renderApp()" class="text-xs text-rose-400 underline">Cancel</button>` : ''}
                 </div>
 
                 <form onsubmit="saveCollegeProfile(event)" class="space-y-3 text-sm">
                     <div>
-                        <label class="text-[11px] font-bold text-cyan-400">${isHi ? 'बिज़नेस / संस्थान कैटेगरी चुनें *' : 'Select Business Category *'}</label>
+                        <label class="text-[11px] font-bold text-cyan-400">Select Business Category *</label>
                         <select id="col-category" onchange="autoApplyCategoryFeatures(this.value)" class="w-full mt-1 px-3 py-2.5 rounded-xl border border-slate-700 bg-slate-900 font-bold text-indigo-300">
                             <option value="School / Inter College" ${editCol && editCol.category === 'School / Inter College' ? 'selected' : ''}>🏫 School / Inter College</option>
                             <option value="Degree College / University" ${editCol && editCol.category === 'Degree College / University' ? 'selected' : ''}>🎓 Degree College / University</option>
@@ -96,17 +108,11 @@ function renderSuperAdminColleges() {
                         </select>
                     </div>
 
-                    <div>
-                        <label class="text-[11px] font-bold adaptive-sub">${isHi ? 'संस्थान / क्लब का नाम *' : 'Institute / Club Name *'}</label>
-                        <input type="text" id="col-name" required value="${editCol ? editCol.name : ''}" placeholder="e.g. IronPulse Gym & Fitness" class="w-full mt-1 px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-white">
-                    </div>
+                    <input type="text" id="col-name" required value="${editCol ? editCol.name : ''}" placeholder="Institute / Club Name *" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-700 bg-slate-900 text-white">
 
-                    <div>
-                        <label class="text-[11px] font-bold text-indigo-400">${isHi ? 'कस्टम URL स्लग *' : 'Custom URL Slug *'}</label>
-                        <div class="flex items-center mt-1 bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
-                            <span class="px-2.5 text-[11px] text-slate-500">?college=</span>
-                            <input type="text" id="col-slug" required value="${editCol ? editCol.slug : ''}" placeholder="ironfit" ${editCol ? 'readonly' : ''} class="w-full py-2.5 px-2 bg-transparent text-emerald-400 font-bold outline-none">
-                        </div>
+                    <div class="flex items-center bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
+                        <span class="px-2.5 text-[11px] text-slate-500">?college=</span>
+                        <input type="text" id="col-slug" required value="${editCol ? editCol.slug : ''}" placeholder="url-slug" ${editCol ? 'readonly' : ''} class="w-full py-2.5 px-2 bg-transparent text-emerald-400 font-bold outline-none">
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">
@@ -118,17 +124,17 @@ function renderSuperAdminColleges() {
                         </select>
                     </div>
 
+                    <!-- Subscription Expiry Date Lock -->
+                    <div>
+                        <label class="text-[11px] font-bold text-rose-400">Subscription Expiry Date (Auto-Lock Date) *</label>
+                        <input type="date" id="col-expiry" required value="${editCol && editCol.expiryDate ? editCol.expiryDate : '2027-11-30'}" class="w-full mt-1 px-3 py-2 rounded-xl border border-rose-500/40 bg-slate-900 text-amber-300 font-bold">
+                    </div>
+
                     <div class="grid grid-cols-2 gap-2">
                         <input type="text" id="col-admin-user" required value="${editCol ? editCol.adminUser : 'admin'}" placeholder="Admin ID *" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-white">
                         <input type="text" id="col-admin-pass" required value="${editCol ? editCol.adminPass : '123'}" placeholder="Password *" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-900 text-white">
                     </div>
 
-                    <div>
-                        <label class="text-[11px] adaptive-sub">Logo Upload (Optional)</label>
-                        <input type="file" id="col-logo-file" accept="image/*" class="w-full mt-1 text-xs">
-                    </div>
-
-                    <div class="text-[11px] font-bold adaptive-sub pt-1">Active Multiplex Modules:</div>
                     <div class="grid grid-cols-2 gap-1.5 text-xs bg-slate-900/70 text-slate-200 p-3 rounded-xl border border-slate-800">
                         <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-adm" ${!editCol || editCol.powers.allowAdmission ? 'checked' : ''}> Admission</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-fee" ${!editCol || editCol.powers.allowFees ? 'checked' : ''}> Fees & Slip</label>
@@ -140,7 +146,7 @@ function renderSuperAdminColleges() {
                         <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-acc" ${!editCol || editCol.powers.allowAccounts ? 'checked' : ''}> Accounts</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-not" ${!editCol || editCol.powers.allowNotices ? 'checked' : ''}> Notices</label>
                         <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-att" ${!editCol || editCol.powers.allowAttendance ? 'checked' : ''}> Attendance</label>
-                        <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-exm" ${!editCol || editCol.powers.allowExams ? 'checked' : ''}> Exams & ID</label>
+                        <label class="flex items-center gap-1.5"><input type="checkbox" id="cp-exm" ${!editCol || editCol.powers.allowExams ? 'checked' : ''}> Exams & TC</label>
                     </div>
 
                     <button type="submit" class="super-btn w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-2.5 rounded-xl shadow-lg">
@@ -157,8 +163,9 @@ function renderSuperAdminColleges() {
 
                 ${registeredColleges.map((c, idx) => {
                     const customLink = `${baseUrl}?college=${c.slug}`;
+                    const isExpired = c.expiryDate && new Date(c.expiryDate) < new Date();
                     return `
-                        <div class="super-tile p-4 rounded-2xl border ${c.active ? 'border-indigo-500/25' : 'border-rose-500/40'} space-y-3">
+                        <div class="super-tile p-4 rounded-2xl border ${c.active && !isExpired ? 'border-indigo-500/25' : 'border-rose-500/50'} space-y-3">
                             <div class="flex flex-wrap justify-between items-start gap-2">
                                 <div class="flex items-center gap-3 cursor-pointer" onclick="enterSuperAdminInstituteView('${c.slug}')">
                                     <div class="w-12 h-12 rounded-xl bg-indigo-600/20 flex items-center justify-center text-2xl overflow-hidden shrink-0">
@@ -167,11 +174,11 @@ function renderSuperAdminColleges() {
                                     <div>
                                         <span class="text-[10px] font-extrabold bg-cyan-500/15 text-cyan-500 px-2 py-0.5 rounded-full">${c.category || 'Institute'}</span>
                                         <div class="font-extrabold text-base adaptive-title hover:text-indigo-400 mt-0.5">${c.name} ↗</div>
-                                        <div class="text-xs adaptive-sub">${c.city} • <span class="text-emerald-500 font-semibold">${c.plan}</span></div>
+                                        <div class="text-xs adaptive-sub">${c.city} • <span class="text-emerald-500 font-semibold">${c.plan}</span> • <span class="text-amber-400 font-bold">Valid Till: ${c.expiryDate || '2027-11-30'}</span></div>
                                     </div>
                                 </div>
-                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${c.active ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'}">
-                                    ${c.active ? '● Active' : '✖ Suspended'}
+                                <span class="px-2.5 py-1 rounded-full text-[11px] font-bold ${!c.active || isExpired ? 'bg-rose-500/20 text-rose-500' : 'bg-emerald-500/20 text-emerald-500'}">
+                                    ${isExpired ? '⏰ Expired' : (c.active ? '● Active' : '✖ Suspended')}
                                 </span>
                             </div>
 
@@ -202,53 +209,45 @@ function saveCollegeProfile(e) {
     const rawSlug = document.getElementById('col-slug').value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
     if (!rawSlug) { alert("Please enter a valid URL slug!"); return; }
 
-    const fileInput = document.getElementById('col-logo-file');
-    const existingLogo = editingCollegeIdx !== null ? registeredColleges[editingCollegeIdx].logo : "";
-
-    const finalizeSave = (logoData) => {
-        const colObj = {
-            slug: rawSlug,
-            category: document.getElementById('col-category').value,
-            name: document.getElementById('col-name').value.trim(),
-            city: document.getElementById('col-city').value.trim() || "India",
-            plan: document.getElementById('col-plan').value,
-            adminUser: document.getElementById('col-admin-user').value.trim(),
-            adminPass: document.getElementById('col-admin-pass').value.trim(),
-            logo: logoData,
-            active: editingCollegeIdx !== null ? registeredColleges[editingCollegeIdx].active : true,
-            powers: {
-                allowAdmission: document.getElementById('cp-adm').checked,
-                allowFees: document.getElementById('cp-fee').checked,
-                allowLibrary: document.getElementById('cp-lib').checked,
-                allowCoaching: document.getElementById('cp-coa').checked,
-                allowGym: document.getElementById('cp-gym').checked,
-                allowCompLab: document.getElementById('cp-lab').checked,
-                allowPayroll: document.getElementById('cp-pay').checked,
-                allowAccounts: document.getElementById('cp-acc').checked,
-                allowNotices: document.getElementById('cp-not').checked,
-                allowAttendance: document.getElementById('cp-att').checked,
-                allowExams: document.getElementById('cp-exm').checked
-            }
-        };
-
-        if (editingCollegeIdx !== null) {
-            registeredColleges[editingCollegeIdx] = colObj;
-            editingCollegeIdx = null;
-        } else {
-            if (registeredColleges.some(c => c.slug === rawSlug)) { alert("URL slug already exists!"); return; }
-            registeredColleges.unshift(colObj);
+    const existing = editingCollegeIdx !== null ? registeredColleges[editingCollegeIdx] : {};
+    const colObj = {
+        slug: rawSlug,
+        category: document.getElementById('col-category').value,
+        name: document.getElementById('col-name').value.trim(),
+        city: document.getElementById('col-city').value.trim() || "India",
+        tagline: existing.tagline || "",
+        phone: existing.phone || "",
+        plan: document.getElementById('col-plan').value,
+        expiryDate: document.getElementById('col-expiry').value,
+        adminUser: document.getElementById('col-admin-user').value.trim(),
+        adminPass: document.getElementById('col-admin-pass').value.trim(),
+        logo: existing.logo || "",
+        stamp: existing.stamp || "",
+        active: editingCollegeIdx !== null ? existing.active : true,
+        powers: {
+            allowAdmission: document.getElementById('cp-adm').checked,
+            allowFees: document.getElementById('cp-fee').checked,
+            allowLibrary: document.getElementById('cp-lib').checked,
+            allowCoaching: document.getElementById('cp-coa').checked,
+            allowGym: document.getElementById('cp-gym').checked,
+            allowCompLab: document.getElementById('cp-lab').checked,
+            allowPayroll: document.getElementById('cp-pay').checked,
+            allowAccounts: document.getElementById('cp-acc').checked,
+            allowNotices: document.getElementById('cp-not').checked,
+            allowAttendance: document.getElementById('cp-att').checked,
+            allowExams: document.getElementById('cp-exm').checked
         }
-        saveCollegesDB();
-        renderApp();
     };
 
-    if (fileInput.files && fileInput.files[0]) {
-        const reader = new FileReader();
-        reader.onload = ev => finalizeSave(ev.target.result);
-        reader.readAsDataURL(fileInput.files[0]);
+    if (editingCollegeIdx !== null) {
+        registeredColleges[editingCollegeIdx] = colObj;
+        editingCollegeIdx = null;
     } else {
-        finalizeSave(existingLogo);
+        if (registeredColleges.some(c => c.slug === rawSlug)) { alert("URL slug already exists!"); return; }
+        registeredColleges.unshift(colObj);
     }
+    saveCollegesDB();
+    renderApp();
 }
 
 function renderSubscriptionLeadsInbox() {
@@ -292,9 +291,9 @@ function quickConvertLeadToCollege(idx) {
 }
 
 function exportCollegesExcel() {
-    let csv = "Slug,Category,Name,City,Plan,AdminID,AdminPass,Status\n";
-    registeredColleges.forEach(c => { csv += `"${c.slug}","${c.category}","${c.name}","${c.city}","${c.plan}","${c.adminUser}","${c.adminPass}","${c.active ? 'Active' : 'Suspended'}"\n`; });
-    downloadCSVFile(csv, "VidyaSetu_All_Multiplex_Institutes.csv");
+    let csv = "Slug,Category,Name,City,Plan,ExpiryDate,AdminID,AdminPass,Status\n";
+    registeredColleges.forEach(c => { csv += `"${c.slug}","${c.category}","${c.name}","${c.city}","${c.plan}","${c.expiryDate || ''}","${c.adminUser}","${c.adminPass}","${c.active ? 'Active' : 'Suspended'}"\n`; });
+    downloadCSVFile(csv, "VidyaSetu_All_Institutes.csv");
 }
 function exportLeadsExcel() {
     let leads = JSON.parse(localStorage.getItem('vs_subscription_leads')) || [];

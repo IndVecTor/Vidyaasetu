@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VidyaSetu Multiplex ERP | School, College, Coaching, Library & Gym</title>
+    <title>VidyaSetu Enterprise Multiplex ERP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' }</script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,7 +22,7 @@
 
     <div id="print-only-container" class="hidden print:block"></div>
 
-    <!-- Ambient Background Glow -->
+    <!-- Ambient Glow -->
     <div class="no-print fixed inset-0 pointer-events-none overflow-hidden z-0">
         <div class="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
         <div class="absolute top-1/2 right-0 w-96 h-96 bg-cyan-500/15 rounded-full blur-3xl"></div>
@@ -31,8 +31,8 @@
     <!-- 1. Official Home Page -->
     <div id="landing-view" class="hidden relative z-10"></div>
 
-    <!-- 2. Role-Wise Login Screen -->
-    <div id="login-screen" class="hidden relative z-10 min-h-screen flex flex-col justify-center items-center p-4 tab-transition">
+    <!-- 2. Role-Wise Login Screen (Admin + Staff + Student/Member) -->
+    <div id="login-screen" class="hidden cyber-grid-bg relative z-10 min-h-screen flex flex-col justify-center items-center p-4 tab-transition">
         <div class="mb-5 flex items-center gap-3">
             <div onclick="toggleLanguage()" class="lang-pill-switch" id="login-lang-pill" title="Switch Language">
                 <div class="lang-pill-thumb"></div>
@@ -66,16 +66,17 @@
                     <select id="login-role-select" onchange="updateRoleHint()" class="w-full px-4 py-3 rounded-xl border border-indigo-500/40 bg-slate-100 dark:bg-slate-900 text-sm font-extrabold text-indigo-500 dark:text-indigo-300 outline-none">
                         <option value="admin">🛡️ Institute Master Admin / Owner</option>
                         <option value="staff">👔 Staff / Trainer / Teacher / Clerk</option>
+                        <option value="student">🎓 Student / Library & Gym Member</option>
                     </select>
                 </div>
 
                 <div>
-                    <label id="lbl-username" class="block text-xs font-bold adaptive-sub mb-1.5">Username</label>
-                    <input type="text" id="login-username" required placeholder="Enter your username" autocomplete="off"
+                    <label id="lbl-username" class="block text-xs font-bold adaptive-sub mb-1.5">Username / Roll Number</label>
+                    <input type="text" id="login-username" required placeholder="Enter username or roll number" autocomplete="off"
                         class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition">
                 </div>
                 <div>
-                    <label id="lbl-password" class="block text-xs font-bold adaptive-sub mb-1.5">Password</label>
+                    <label id="lbl-password" class="block text-xs font-bold adaptive-sub mb-1.5">Password / Mobile No.</label>
                     <input type="password" id="login-password" required placeholder="••••••••"
                         class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900/90 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 outline-none transition">
                 </div>
@@ -89,13 +90,16 @@
 
             <div id="demo-credentials-hint" class="mt-5 pt-4 border-t border-slate-300/40 dark:border-slate-800 text-[11px] adaptive-sub text-center"></div>
             <div class="mt-3 text-center text-[10px] adaptive-sub">
-                Powered by <a href="?" class="text-indigo-500 font-bold hover:underline">VidyaSetu Multiplex ERP</a>
+                Technology Partner: <a href="?" class="text-indigo-500 font-bold hover:underline">VidyaSetu Cloud</a>
             </div>
         </div>
     </div>
 
-    <!-- 3. App-Shell Layout: Wide Grand Top Header + Clean Left Sidebar -->
+    <!-- 3. App-Shell Layout -->
     <div id="dashboard-screen" class="hidden relative z-10 min-h-screen flex flex-col">
+        <!-- Subscription Expiry Warning Banner (दिखेगा यदि 15 दिन से कम बचे हों) -->
+        <div id="expiry-warning-banner" class="hidden no-print bg-gradient-to-r from-amber-600 to-rose-600 text-white text-center text-xs font-extrabold py-2 px-4"></div>
+
         <header class="no-print sticky top-0 z-30 glass-panel border-b-2 border-indigo-500/30 px-5 sm:px-10 py-5 shadow-2xl">
             <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
                 <div class="flex items-center gap-4 sm:gap-5 min-w-0 flex-1">
@@ -162,6 +166,8 @@
     <script src="landing.js"></script>
     <script src="superanalytics.js"></script>
     <script src="superadmin.js"></script>
+    <script src="branding.js"></script>
+    <script src="certificates.js"></script>
     <script src="dashboard.js"></script>
     <script src="fees.js"></script>
     <script src="library_pro.js"></script>
